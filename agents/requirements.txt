@@ -1,0 +1,5 @@
+shopifyapi
+openai
+pandas
+schedule
+requests
