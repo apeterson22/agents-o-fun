@@ -18,6 +18,9 @@ from dashboards.monitoring import MonitoringDashboard
 from ai_self_improvement.rl_trainer import RLTrainer
 from ai_self_improvement.genetic_optimizer import GeneticOptimizer
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 def setup_logging(log_file: str = 'logs/main_agent.log') -> logging.Logger:
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -87,8 +90,12 @@ class TradingAgent:
         try:
             if self.ai_provider.lower() == 'ollama':
                 from ollama import Client
-                self.ai_client = Client(host=self.ai_endpoint)
-                self.logger.info(f"Initialized local Ollama AI at {self.ai_endpoint}")
+                self.ai_client = Client(host=self.ai_endpoint)  # External server endpoint
+                # Test connection
+                response = requests.get(f"{self.ai_endpoint}/api/tags", timeout=5)
+                if response.status_code != 200:
+                    raise ConnectionError("Ollama server not reachable")
+                self.logger.info(f"Initialized Ollama client to external server at {self.ai_endpoint}")
             elif self.ai_provider.lower() == 'openai':
                 self.ai_client = lambda prompt: requests.post(
                     "https://api.openai.com/v1/completions",
