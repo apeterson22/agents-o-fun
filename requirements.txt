@@ -2,4 +2,8 @@ stable-baselines3
 gym
 torch
 deap
+dash
+plotly
+pandas
+sqlite3
 requests
