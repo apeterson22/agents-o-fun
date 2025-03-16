@@ -7,3 +7,6 @@ plotly
 pandas
 sqlite3
 requests
+configparser
+requests
+ollama  # If available; otherwise, implement custom client
