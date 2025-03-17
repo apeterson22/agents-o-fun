@@ -5,6 +5,12 @@ from deap import base, creator, tools, algorithms
 import random
 import numpy as np
 
+logging.basicConfig(
+    filename='logs/genetic_algo.log',
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s]: %(message)s'
+)
+
 def setup_logging(log_file: str = 'logs/genetic_algo.log') -> None:
     """Configure logging settings."""
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -48,7 +54,7 @@ class GeneticOptimizer:
         
         self.toolbox.register("mate", tools.cxBlend, alpha=0.5)
         self.toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.2, indpb=0.2)
-        self.toolbox.decorate("mutate", tools.DeltaUpdate(valid_range=(-1.0, 1.0)))
+        #self.toolbox.decorate("mutate", tools.DeltaUpdate(valid_range=(-1.0, 1.0)))
         self.toolbox.register("select", tools.selTournament, tournsize=3)
         self.toolbox.register("evaluate", self.evaluate_individual)
         

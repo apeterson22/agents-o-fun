@@ -7,11 +7,13 @@ logging.basicConfig(
 )
 
 class RiskManager:
-    def __init__(self, max_daily_loss, stop_loss_pct, max_position_size):
+    def __init__(self, max_daily_loss, stop_loss_pct, max_position_size, daily_goal=10000):
+        self.daily_goal = daily_goal
         self.max_daily_loss = max_daily_loss
         self.stop_loss_pct = stop_loss_pct
         self.max_position_size = max_position_size
         self.current_daily_loss = 0
+        self.current_daily_profit = 0
 
     def assess_trade_risk(self, entry_price, stop_price, position_size):
         potential_loss = abs(entry_price - stop_price) * position_size

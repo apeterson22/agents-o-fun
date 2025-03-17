@@ -1,25 +1,12 @@
-dash==2.9.3
-plotly==5.14.1
-pandas==2.0.0
-sqlite3
-requests==2.28.2
-ollama  # If not available, remove or implement custom client
-aiofiles==23.1.0
-stable-baselines3==2.0.0
-torch==2.0.0
-gym==0.26.2
-deap==1.3.3
-numpy==1.24.2
-configparser==5.3.0
-#stable-baselines3
-#gym
-#torch
-#deap
-#dash
-#plotly
-#pandas
-#sqlite3
-#requests
-#configparser
-#requests
-#ollama  # If available; otherwise, implement custom client
+dash
+plotly
+pandas
+requests
+aiofiles
+stable-baselines3
+torch
+gym
+deap
+numpy
+configparser
+python-dotenv

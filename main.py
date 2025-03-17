@@ -15,11 +15,48 @@ from core.risk_manager import RiskManager
 from core.regulatory_compliance import RegulatoryCompliance
 from ai_self_improvement.feature_writer import AdvancedFeatureWriter
 from dashboards.monitoring import MonitoringDashboard
-from ai_self_improvement.rl_trainer import RLTrainer
-from ai_self_improvement.genetic_optimizer import GeneticOptimizer
+from ai_self_improvement.reinforcement_learning import RLTrainer
+from ai_self_improvement.genetic_algo import GeneticOptimizer
 import requests
 from dotenv import load_dotenv
+import sys
 
+##################################
+### Needed for troubleshooting ###
+##################################
+sys.setrecursionlimit(10000)
+
+logging.basicConfig(
+    filename='logs/main_agent.log',
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s]: %(message)s',
+    filemode='a',
+    force=True  # forces immediate setup
+)
+logging.info("Logging successfully initialized.")
+print("Script Started, logging initialing")
+logging.info("Script started correctly.")
+
+try:
+    # Quick modules check
+    from core.api_interface import FidelityAPI
+    from core.crypto_interface import CryptoAPI
+    from core.betting_interface import BettingAPI
+    from core.risk_manager import RiskManager
+    from core.regulatory_compliance import RegulatoryCompliance
+    from ai_self_improvement.feature_writer import AdvancedFeatureWriter
+    from dashboards.monitoring import MonitoringDashboard
+
+    logging.info("All modules imported successfully.")
+
+    print("All modules imported successfully, script running.")
+except Exception as e:
+    logging.exception("Module import error:")
+    print(f"Module import error: {e}")
+
+###################################
+###  End of troubleshooting     ###
+###################################
 load_dotenv()  # Load environment variables from .env file
 
 def setup_logging(log_file: str = 'logs/main_agent.log') -> logging.Logger:
@@ -35,6 +72,7 @@ def setup_logging(log_file: str = 'logs/main_agent.log') -> logging.Logger:
 class TradingAgent:
     def __init__(self, config_file: str = 'config.ini'):
         self.logger = setup_logging()
+        self.config = self.load_config(config_file) 
         self.load_config(config_file)
         self.daily_profit = 0.0
         self.last_reset = datetime.now().date()
@@ -79,14 +117,24 @@ class TradingAgent:
         self.dashboard.integrate_components(self.rl_trainer, self.genetic_optimizer, self.feature_writer)
         threading.Thread(target=self.dashboard.start, daemon=True).start()
 
-    def load_config(self, config_file: str) -> None:
-        self.config = configparser.ConfigParser()
-        if not self.config.read(config_file):
-            raise FileNotFoundError(f"Config file {config_file} not found")
+    def load_config(self, config_file: str) -> configparser.ConfigParser:
+        """Loads the configuration from the specified file."""
+        print("Loading config...")
+        config = configparser.ConfigParser(inline_comment_prefixes=(';', '#'))
+        try:
+            config.read(config_file)
+            if not config.sections():
+                raise ValueError("Configuration file is empty or invalid.")
+            self.logger.info(f"Configuration loaded from {config_file}")
+        except Exception as e:
+            self.logger.error(f"Error loading config: {e}")
+            raise
+        return config
         self.daily_goal = self.config.getfloat('Goals', 'daily_profit')
         self.logger.info(f"Configuration loaded: Daily Goal = ${self.daily_goal:,}")
 
     def _init_ai_client(self) -> None:
+        print("Starting Ai Client init...")
         try:
             if self.ai_provider.lower() == 'ollama':
                 from ollama import Client
@@ -237,9 +285,13 @@ async def main() -> None:
     await agent.trading_loop()
 
 if __name__ == "__main__":
+    print("Main has begun...")
     try:
+        import asyncio
         asyncio.run(main())
     except KeyboardInterrupt:
         logging.info("AI Trading agent stopped by user.")
     except Exception as e:
+        print(f"Error Encountered: {e}")
+        logging.exception(f"Unhandled exception: {e}")
         logging.error(f"Main execution failed: {e}")

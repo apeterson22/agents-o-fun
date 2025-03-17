@@ -6,7 +6,7 @@ import threading
 import time
 import logging
 import os
-from typing import Dict, List, Optional
+from typing import Dict, Any, List, Optional
 from queue import Queue
 import sqlite3
 from datetime import datetime
