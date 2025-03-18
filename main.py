@@ -87,13 +87,16 @@ class TradingAgent:
             self.betting_api = BettingAPI(cryptocom_api_key=os.getenv("CRYPTOCOM_BETTING_KEY", self.config.get('API', 'cryptocom_betting_key')))
         except Exception as e:
             self.logger.error(f"API initialization failed: {e}")
-            raise
+            self.fidelity_api = None
+            self.crypto_api = None
+            self.betting_api = None
 
+        self.daily_goal = self.config.getfloat('Goals', 'daily_profit')  # Ensures daily_goal is initialized
         self.risk_manager = RiskManager(
             max_daily_loss=self.config.getfloat('Risk', 'max_daily_loss'),
             stop_loss_pct=self.config.getfloat('Risk', 'stop_loss_pct'),
             max_position_size=self.config.getfloat('Risk', 'max_position_size'),
-            daily_goal=self.daily_goal
+            daily_goal=self.config.getfloat('Goals', 'daily_profit')
         )
         self.compliance = RegulatoryCompliance()
         self.trading_engine = TradingEngine(
@@ -113,7 +116,7 @@ class TradingAgent:
         self.ai_api_key = os.getenv("AI_API_KEY", self.config.get('AI', 'api_key', fallback=None))
         self._init_ai_client()
 
-        self.dashboard = MonitoringDashboard()
+        self.dashboard = MonitoringDashboard(agent=self)
         self.dashboard.integrate_components(self.rl_trainer, self.genetic_optimizer, self.feature_writer)
         threading.Thread(target=self.dashboard.start, daemon=True).start()
 
@@ -130,7 +133,6 @@ class TradingAgent:
             self.logger.error(f"Error loading config: {e}")
             raise
         return config
-        self.daily_goal = self.config.getfloat('Goals', 'daily_profit')
         self.logger.info(f"Configuration loaded: Daily Goal = ${self.daily_goal:,}")
 
     def _init_ai_client(self) -> None:
@@ -169,29 +171,33 @@ class TradingAgent:
             try:
                 if not await self.health_check():
                     self.logger.error("System health check failed. Trading halted.")
-                    break
+                    self.logger.info("Switching to Training Mode.")
+                    self.train_only_mode()  # Ensure training continues
+                    await asyncio.sleep(300)  # Wait and retry health check
+                    continue  # Skip trading 
 
                 current_date = datetime.now().date()
                 if current_date > self.last_reset:
                     self.daily_profit = 0.0
                     self.last_reset = current_date
                     self.logger.info("Daily profit reset for new trading day")
-
-                stock_data = await self._fetch_with_retry(self.fidelity_api.get_market_data, {"symbol": "PENNY_STOCKS"})
-                crypto_data = await self._fetch_with_retry(self.crypto_api.get_coinbase_data, {"symbol": "BTC-USD"})
-                betting_data = await self._fetch_with_retry(self.betting_api.get_betting_odds, {"event_id": "EVENT_ID"})
-
-                trades, bets = await self._ai_enhanced_evaluation(stock_data, crypto_data, betting_data)
-                executed_trades = await self._execute_and_monitor(trades, bets)
-
-                await self._self_improve(stock_data, crypto_data, betting_data, executed_trades)
-
-                if self.daily_profit >= self.daily_goal:
-                    self.logger.info(f"Daily profit goal of ${self.daily_goal:,} achieved: ${self.daily_profit:,.2f}")
-                    await asyncio.sleep(3600)
+                    current_hour = datetime.now().hour
+                if self.compliance.check_compliance():
+                    logging.info("Within trading hours. Running trading cycle...")
+                    print("Trading is active...")
+                    stock_data = await self._fetch_with_retry(self.fidelity_api.get_market_data, {"symbol": "PENNY_STOCKS"})
+                    crypto_data = await self._fetch_with_retry(self.crypto_api.get_coinbase_data, {"symbol": "BTC-USD"})
+                    betting_data = await self._fetch_with_retry(self.betting_api.get_betting_odds, {"event_id": "EVENT_ID"})
+                    trades, bets = self.trading_engine.evaluate_strategies(stock_data, crypto_data, betting_data)
+                    self.trading_engine.execute_trades_and_bets(trades, bets)
                 else:
-                    await asyncio.sleep(5)
+                    logging.info("Outside trading hours. Running analysis & training.")
+                    self.train_only_mode()  # Ensure training runs
+                    self.rl_trainer.train_model(10000)
+                    self.genetic_optimizer.run_optimization()
+                    self.feature_writer.evaluate_and_write()
 
+                await asyncio.sleep(300)  # 5-minute sleep intervals
             except Exception as e:
                 self.logger.error(f"Trading loop error: {e}")
                 await asyncio.sleep(60)
@@ -275,6 +281,12 @@ class TradingAgent:
             )
             compliance_ok = self.compliance.check_compliance()
             ai_ok = self.ai_client is not None
+            if not apis_ok:
+                self.logger.error("Health Check Failed: One or more APIs are unavailable.")
+            if not compliance_ok:
+                self.logger.error("Health Check Failed: Compliance check did not pass.")
+            if not ai_ok:
+                self.logger.error("Health Check Failed: AI Client is not initialized.")
             return apis_ok and compliance_ok and ai_ok
         except Exception as e:
             self.logger.error(f"Health check failed: {e}")

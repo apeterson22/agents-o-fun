@@ -29,13 +29,15 @@ def setup_logging(log_file: str = 'logs/dashboard.log') -> logging.Logger:
     return logging.getLogger(__name__)
 
 class MonitoringDashboard:
-    def __init__(self, db_path: str = 'trades.db', update_interval: int = 1000) -> None:
+    def __init__(self, agent, db_path: str = 'trades.db', update_interval: int = 1000) -> None:
         self.logger = setup_logging()
+        self.agent = agent
         self.app = dash.Dash(__name__, update_title=None)
         self.trade_queue = Queue()
         self.db_path = db_path
         self.update_interval = update_interval
         self.running = False
+        self.trainging_mode = False # Track training mode status
         self.daily_goal = 10000  # $10,000 daily profit goal
         self.rl_trainer = None  # Placeholder for RLTrainer integration
         self.genetic_optimizer = None  # Placeholder for GeneticOptimizer
@@ -55,6 +57,10 @@ class MonitoringDashboard:
                 html.P(id='active-strategies'),
                 html.P(id='api-status')
             ]),
+            html.Button("Toggle Training Mode", id="toggle-train-btn", n_clicks=0),
+            html.Button("Retry Health Check", id="retry-health-btn", n_clicks=0),
+            html.Div(id="training-status"),
+            html.Div(id="health-status"),
             dcc.Interval(id='interval-component', interval=update_interval, n_intervals=0),
             dcc.Store(id='trade-data-store')
         ])
@@ -86,10 +92,35 @@ class MonitoringDashboard:
              Output('success-rate', 'text'),
              Output('active-strategies', 'text'),
              Output('api-status', 'text'),
+             Output("training-status", "children"),
              Output('trade-data-store', 'data')],
-            [Input('interval-component', 'n_intervals')],
-            [State('trade-data-store', 'data')]
+            [Input('interval-component', 'n_intervals'),
+             Input("toggle-train-btn", "n_clicks")],
+            [State('trade-data-store', 'data')],
+            prevent_initial_call=True
         )
+        def toggle_training(n_clicks):
+            """Toggle training mode and log the action."""
+            self.training_mode = not self.training_mode
+            self.logger.info(f"Training Mode toggled: {'ON' if self.training_mode else 'OFF'}")
+
+            if self.training_mode:
+                self.logger.info("Starting Training Mode...")
+                threading.Thread(target=self.agent.train_only_mode, daemon=True).start()
+
+            return f"Training Mode: {'ON' if self.training_mode else 'OFF'}"
+
+        @self.app.callback(
+            Output("health-status", "children"),
+            [Input("retry-health-btn", "n_clicks")],
+            prevent_initial_call=True
+        )
+        def retry_health_check(n_clicks):
+            """Retry system health check."""
+            self.logger.info("Retrying system health check...")
+#            health_ok = self.agent.health_check()
+            health_ok = asyncio.run(self.agent.health_check())  # Properly await the function
+            return f"Health Check: {'PASS' if health_ok else 'FAIL'}"
         def update_dashboard(n: int, stored_data: Optional[Dict]) -> tuple:
             df = self.load_latest_data()
             api_status = self._check_api_status()
