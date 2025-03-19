@@ -1,5 +1,9 @@
 dash
 plotly
+shimmy>=2.0
+ollama
+asyncio
+openai
 pandas
 requests
 aiofiles

@@ -140,11 +140,19 @@ class AdvancedFeatureWriter:
             Dict[str, float]: Performance metrics
         """
         if not results:
-            return {'profitability': 0.0, 'success_rate': 0.0}
+            return {'profitability': 0.0, 'success_rate': 0.0, 'max_drawdown': 0.0}
             
         try:
+            #Calculate total Profitablitiy
             profitability = sum(trade.get('profit', 0) for trade in results)
+        
+            #Calculate success rate (percentage of profitable trades)
             success_rate = len([t for t in results if t.get('profit', 0) > 0]) / len(results)
+            
+            # Calculate Max Drawdown (worst case loss)
+            running_balance = [sum(trade.get('profit', 0) for trade in results[:i+1]) for i in range(len(results))]
+            max_drawdown = min(running_balance) if running_balance else 0
+            
             # Additional metrics
             max_drawdown = min(0, min([sum(results[:i+1], {}).get('profit', 0) 
                                      for i in range(len(results))] or [0]))

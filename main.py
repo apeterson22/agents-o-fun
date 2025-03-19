@@ -120,6 +120,47 @@ class TradingAgent:
         self.dashboard.integrate_components(self.rl_trainer, self.genetic_optimizer, self.feature_writer)
         threading.Thread(target=self.dashboard.start, daemon=True).start()
 
+    def train_only_mode(self) -> None:
+        """Runs the agent in training mode only, without executing trades."""
+        self.logger.info("Training Mode Activated: Running AI Training...")
+
+        # Run Reinforcement Learning Training
+        if self.rl_trainer:
+            self.logger.info("Running RL Training...")
+            self.rl_trainer.train_model(timesteps=10000)
+
+        # Run Genetic Algorithm Optimization
+        if self.genetic_optimizer:
+            self.logger.info("Running Genetic Algorithm Optimization...")
+            best_params = self.genetic_optimizer.run_optimization()
+            if best_params:
+                self.logger.info(f"Optimized parameters found: {best_params}")
+
+        # Run Feature Engineering
+        if self.feature_writer:
+            self.logger.info("Running Feature Engineering...")
+            if hasattr(self.feature_writer, "evaluate_feature"):
+                self.logger.info("Running Feature Evaluation...")
+                sample_module = self.feature_writer.load_feature("sample_feature")  # Change this if needed
+                sample_data = [{"expected_return": 100}, {"expected_return": -50}]
+                if sample_module:
+                    self.feature_writer.evaluate_feature(sample_module, sample_data)
+            elif hasattr(self.feature_writer, "continuous_evaluation_cycle"):
+                self.logger.info("Running Continuous Evaluation Cycle...")
+                sample_data = [{"expected_return": 100}, {"expected_return": -50}]
+                threading.Thread(target=self.feature_writer.continuous_evaluation_cycle, args=(sample_data, 3600), daemon=True).start()
+            else:
+                self.logger.error("Feature writer has no valid method for training mode.")
+#            if hasattr(self.feature_writer, "evaluate_and_write"):
+#                self.feature_writer.evaluate_and_write()
+#            elif hasattr(self.feature_writer, "process_features"):  # Example alternative
+#                self.feature_writer.process_features()
+#            else:
+#                self.logger.error("Feature writer has no valid method for training mode.")
+
+        self.logger.info("Training Mode Complete.")
+
+
     def load_config(self, config_file: str) -> configparser.ConfigParser:
         """Loads the configuration from the specified file."""
         print("Loading config...")

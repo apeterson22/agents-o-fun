@@ -1,6 +1,6 @@
 import logging
-import os
 import pickle
+import os
 from typing import Tuple, List, Optional
 from deap import base, creator, tools, algorithms
 import random
@@ -55,6 +55,7 @@ class GeneticOptimizer:
         
         self.toolbox.register("mate", tools.cxBlend, alpha=0.5)
         self.toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.2, indpb=0.2)
+        #self.toolbox.decorate("mutate", tools.DeltaUpdate(valid_range=(-1.0, 1.0)))
         self.toolbox.register("select", tools.selTournament, tournsize=3)
         self.toolbox.register("evaluate", self.evaluate_individual)
         
@@ -68,6 +69,7 @@ class GeneticOptimizer:
         pop = []
         for _ in range(n):
             ind = self.toolbox.individual()
+            # Example: bias first parameter towards higher values
             ind[0] = random.uniform(0.5, 1.0)
             pop.append(ind)
         return pop
@@ -90,68 +92,62 @@ class GeneticOptimizer:
             return (float('-inf'),)
 
     def run_optimization(self, checkpoint_path: str = "ga_checkpoint.pkl") -> Optional[List[float]]:
-        """
-        Run the genetic optimization algorithm with checkpointing.
-        
-        Args:
-            checkpoint_path (str): Path for saving/loading checkpoint
-            
-        Returns:
-            Optional[List[float]]: Best individual found or None if failed
-        """
-        try:
-            # Load from checkpoint if exists
-            if os.path.exists(checkpoint_path):
-                with open(checkpoint_path, "rb") as cp_file:
-                    cp = pickle.load(cp_file)
-                population = cp["population"]
-                hof = cp["halloffame"]
-                logbook = cp["logbook"]
-                random.setstate(cp["rndstate"])
-                start_gen = cp["generation"]
-                logging.info(f"Resuming from checkpoint at generation {start_gen}")
-            else:
-                population = self.toolbox.population_custom(n=self.pop_size)
-                hof = tools.HallOfFame(1)
-                logbook = tools.Logbook()
-                start_gen = 0
+    """
+    Run the genetic optimization algorithm with checkpointing.
+    """
+    try:
+        # Load from checkpoint if exists
+        if os.path.exists(checkpoint_path):
+            with open(checkpoint_path, "rb") as cp_file:
+                cp = pickle.load(cp_file)
+            population = cp["population"]
+            hof = cp["halloffame"]
+            logbook = cp["logbook"]
+            random.setstate(cp["rndstate"])
+            start_gen = cp["generation"]
+            logging.info(f"Resuming from checkpoint at generation {start_gen}")
+        else:
+            population = self.toolbox.population_custom(n=self.pop_size)
+            hof = tools.HallOfFame(1)
+            logbook = tools.Logbook()
+            start_gen = 0
 
-            # Run the evolutionary algorithm with manual checkpointing
-            for gen in range(start_gen, self.generations):
-                population, logbook = algorithms.eaSimple(
-                    population,
-                    self.toolbox,
-                    cxpb=0.8,
-                    mutpb=0.2,
-                    ngen=1,  # Run one generation at a time
-                    stats=self.stats,
-                    halloffame=hof,
-                    verbose=True
-                )
+        # Run the evolutionary algorithm
+        for gen in range(start_gen, self.generations):
+            population, logbook = algorithms.eaSimple(
+                population,
+                self.toolbox,
+                cxpb=0.8,
+                mutpb=0.2,
+                ngen=1,  # Run one generation at a time
+                stats=self.stats,
+                halloffame=hof,
+                verbose=True
+            )
 
-                # Save checkpoint after each generation
-                cp = {
-                    "population": population,
-                    "halloffame": hof,
-                    "logbook": logbook,
-                    "rndstate": random.getstate(),
-                    "generation": gen + 1
-                }
-                with open(checkpoint_path, "wb") as cp_file:
-                    pickle.dump(cp, cp_file)
+            # Save checkpoint after each generation
+            cp = {
+                "population": population,
+                "halloffame": hof,
+                "logbook": logbook,
+                "rndstate": random.getstate(),
+                "generation": gen + 1
+            }
+            with open(checkpoint_path, "wb") as cp_file:
+                pickle.dump(cp, cp_file)
 
-            best_individual = hof[0]
-            stats_record = logbook.select("max", "avg")
+        best_individual = hof[0]
+        stats_record = logbook.select("max", "avg")
 
-            logging.info(f"Optimization completed. Best fitness: {best_individual.fitness.values[0]}")
-            logging.info(f"Best individual: {best_individual}")
-            logging.info(f"Final max fitness: {stats_record[0][-1]}, avg: {stats_record[1][-1]}")
+        logging.info(f"Optimization completed. Best fitness: {best_individual.fitness.values[0]}")
+        logging.info(f"Best individual: {best_individual}")
+        logging.info(f"Final max fitness: {stats_record[0][-1]}, avg: {stats_record[1][-1]}")
 
-            return best_individual
+        return best_individual
 
-        except Exception as e:
-            logging.error(f"Error running genetic algorithm: {e}")
-            return None
+    except Exception as e:
+        logging.error(f"Error running genetic algorithm: {e}")
+        return None
 
     def __del__(self) -> None:
         """Clean up DEAP creator objects."""
@@ -172,4 +168,3 @@ if __name__ == "__main__":
             logging.info("Optimization successful")
     except Exception as e:
         logging.error(f"Main execution failed: {e}")
-
