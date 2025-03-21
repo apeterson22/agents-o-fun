@@ -14,3 +14,4 @@ deap
 numpy
 configparser
 python-dotenv
+stable-baselines3[extra]

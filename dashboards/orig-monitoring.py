@@ -9,9 +9,12 @@ import os
 from typing import Dict, Any, List, Optional
 from queue import Queue
 import sqlite3
+import asyncio
 from datetime import datetime
 import requests  # For API calls
 import random  # For simulation (remove in production)
+from ai_self_improvement.training_data_generator import get_training_sample_stats, TrainingDataGenerator
+
 
 # Placeholder API credentials (replace with actual keys from your config)
 FIDELITY_API_KEY = "your_fidelity_key"
@@ -37,7 +40,7 @@ class MonitoringDashboard:
         self.db_path = db_path
         self.update_interval = update_interval
         self.running = False
-        self.trainging_mode = False # Track training mode status
+        self.training_mode = False  # Track training mode status
         self.daily_goal = 10000  # $10,000 daily profit goal
         self.rl_trainer = None  # Placeholder for RLTrainer integration
         self.genetic_optimizer = None  # Placeholder for GeneticOptimizer
@@ -55,19 +58,39 @@ class MonitoringDashboard:
                 html.P(id='goal-progress'),
                 html.P(id='success-rate'),
                 html.P(id='active-strategies'),
-                html.P(id='api-status')
+                html.P(id='api-status'),
+                html.P(id="current-mode", children="Mode: Trading")
             ]),
             html.Button("Toggle Training Mode", id="toggle-train-btn", n_clicks=0),
             html.Button("Retry Health Check", id="retry-health-btn", n_clicks=0),
             html.Div(id="training-status"),
             html.Div(id="health-status"),
+            dcc.Dropdown(
+                id="training-mode-select",
+                options=[
+                    {"label": "Default", "value": "default"},
+                    {"label": "Anomaly Injection", "value": "anomaly"},
+                    {"label": "Market Bias", "value": "market_bias"}
+                ],
+                value="default",
+                placeholder="Select Training Mode"
+            ),
+            html.Button("Generate Custom Training Set", id="custom-generate-btn"),
+            html.Div([
+                html.H4("Training Data Overview"),
+                html.Div(id='training-data-stats'),
+                html.Button("Generate New Training Set", id="generate-training-btn", n_clicks=0),
+                dcc.Interval(id="training-data-refresh", interval=60*1000, n_intervals=0)  # Auto-refresh every minute
+            ]),
             dcc.Interval(id='interval-component', interval=update_interval, n_intervals=0),
+            dcc.Store(id="mode-store"),  # Stores training mode state
             dcc.Store(id='trade-data-store')
         ])
 
         self._register_callbacks()
 
     def _init_db(self) -> None:
+        """Initializes the trades database."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute('''
                 CREATE TABLE IF NOT EXISTS trades (
@@ -84,103 +107,75 @@ class MonitoringDashboard:
 
     def _register_callbacks(self) -> None:
         @self.app.callback(
-            [Output('profit-graph', 'figure'),
-             Output('strategy-performance', 'figure'),
-             Output('market-breakdown', 'figure'),
-             Output('daily-profit', 'text'),
-             Output('goal-progress', 'text'),
-             Output('success-rate', 'text'),
-             Output('active-strategies', 'text'),
-             Output('api-status', 'text'),
-             Output("training-status", "children"),
-             Output('trade-data-store', 'data')],
-            [Input('interval-component', 'n_intervals'),
-             Input("toggle-train-btn", "n_clicks")],
-            [State('trade-data-store', 'data')],
+            [Output("training-status", "children"),
+             Output("current-mode", "children"),
+             Output("mode-store", "data"),
+             Output("training-data-stats", "children")],
+            [Input("toggle-train-btn", "n_clicks"),
+             Input("training-data-refresh", "n_intervals"),
+             Input("generate-training-btn", "n_clicks")],
+            [State("mode-store", "data")],
             prevent_initial_call=True
         )
-        def toggle_training(n_clicks):
-            """Toggle training mode and log the action."""
-            if n_clicks is None or n_clicks % 2 == 0:
-                self.training_mode = False
-                return "Training Mode: OFF"
-            else:
-                self.training_mode = True
-                return "Training Mode: ON"
-            self.training_mode = not self.training_mode 
-            self.logger.info(f"Training Mode toggled: {'ON' if self.training_mode else 'OFF'}")
+        def toggle_training(n_clicks, mode_state):
+            """Toggle training mode and update display."""
+            if mode_state is None:
+                mode_state = {"training_mode": False}
+            
+            mode_state["training_mode"] = not mode_state["training_mode"]
+            self.training_mode = mode_state["training_mode"]
+
+            mode_text = "Training" if self.training_mode else "Trading"
+            self.logger.info(f"Training Mode toggled: {mode_text}")
 
             if self.training_mode:
                 self.logger.info("Starting Training Mode...")
                 threading.Thread(target=self.agent.train_only_mode, daemon=True).start()
-            return f"Training Mode: {'ON' if self.training_mode else 'OFF'}"
+
+            return f"Training Mode: {mode_text}", f"Mode: {mode_text}", mode_state
 
         @self.app.callback(
-            Output("health-status", "children"),
-            [Input("retry-health-btn", "n_clicks")],
+            [Output("health-status", "children"),
+             Output("training-data-stats", "children")],
+            [Input("custom-generate-btn", "n_clicks"),
+             Input("training-data-refresh", "n_intervals"),
+             Input("retry-health-btn", "n_clicks")],
+            [State("training-mode-select", "value")],
             prevent_initial_call=True
         )
         def retry_health_check(n_clicks):
-            """Retry system health check."""
-            if n_clicks is None:
-                return "Health Check: Waiting..."
+            """Retry system health check asynchronously."""
             self.logger.info("Retrying system health check...")
-#            health_ok = self.agent.health_check()
             health_ok = asyncio.run(self.agent.health_check())  # Properly await the function
             return f"Health Check: {'PASS' if health_ok else 'FAIL'}"
-        def update_dashboard(n: int, stored_data: Optional[Dict]) -> tuple:
-            df = self.load_latest_data()
-            api_status = self._check_api_status()
-            if df.empty:
-                return [go.Figure()] * 3 + ["N/A"] * 5 + [{}]
+    def generate_custom_training(n_clicks, _, selected_mode):
+        if n_clicks:
+            tdg = TrainingDataGenerator()
+            tdg.generate_and_store_all(synthetic_count=200, trade_log_limit=300, mode=selected_mode)
 
-            # Profit over time
-            profit_fig = go.Figure(data=[
-                go.Scatter(x=df['timestamp'], y=df['profit'].cumsum(), 
-                         mode='lines', name='Cumulative Profit')
-            ])
-            profit_fig.update_layout(title='Profit Over Time', xaxis_title='Time', yaxis_title='Profit ($)')
-
-            # Strategy performance
-            strategy_df = df.groupby('strategy')['profit'].sum().reset_index()
-            strat_fig = go.Figure(data=[
-                go.Bar(x=strategy_df['strategy'], y=strategy_df['profit'], name='Strategy Profit')
-            ])
-            strat_fig.update_layout(title='Strategy Performance', xaxis_title='Strategy', yaxis_title='Profit ($)')
-
-            # Market breakdown
-            market_df = df.groupby('market')['profit'].sum().reset_index()
-            market_fig = go.Figure(data=[
-                go.Pie(labels=market_df['market'], values=market_df['profit'], name='Market Share')
-            ])
-            market_fig.update_layout(title='Profit by Market')
-
-            # Metrics
-            today = datetime.now().date()
-            daily_profit = df[df['timestamp'].dt.date == today]['profit'].sum()
-            success_rate = (df['profit'] > 0).mean()
-            active_strategies = len(df['strategy'].unique())
-
-            return (
-                profit_fig,
-                strat_fig,
-                market_fig,
-                f"Daily Profit: ${daily_profit:,.2f}",
-                f"Goal Progress: {(daily_profit/self.daily_goal)*100:.1f}% (${self.daily_goal:,})",
-                f"Success Rate: {success_rate:.2%}",
-                f"Active Strategies: {active_strategies}",
-                f"API Status: {api_status}",
-                df.to_dict('records')
-            )
-
+        stats = get_training_sample_stats()
+        return html.Ul([
+            html.Li(f"Total Samples: {stats['total_samples']}"),
+            html.Li("By Tag:"),
+            html.Ul([html.Li(f"{tag}: {count}") for tag, count in stats["tags"].items()])
+        ])
     def start(self) -> None:
         if not self.running:
             self.running = True
             threading.Thread(target=self.run_dashboard, daemon=True).start()
             self.logger.info("Dashboard thread started")
-        else:
-            self.logger.warning("Dashboard already running")
+    def update_training_stats(_, generate_clicks):
+        ctx = dash.callback_context
+        if ctx.triggered and ctx.triggered[0]['prop_id'].startswith("generate-training-btn"):
+            tdg = TrainingDataGenerator()
+            tdg.generate_and_store_all(synthetic_count=200, trade_log_limit=300, mode="market_bias")
 
+        stats = get_training_sample_stats()
+        return html.Ul([
+            html.Li(f"Total Samples: {stats['total_samples']}"),
+            html.Li("By Tag:") if stats["tags"] else "",
+            html.Ul([html.Li(f"{tag}: {count}") for tag, count in stats["tags"].items()])
+        ])
     def run_dashboard(self) -> None:
         try:
             self.logger.info("Starting monitoring dashboard on http://0.0.0.0:8050")
@@ -190,28 +185,15 @@ class MonitoringDashboard:
         finally:
             self.running = False
 
-    def add_trade_record(self, trade: Dict[str, Any]) -> None:
-        required_keys = {'market', 'profit', 'strategy', 'trade_type', 'source'}
-        if not all(k in trade for k in required_keys):
-            self.logger.error(f"Invalid trade format: {trade}")
-            return
-
-        trade['timestamp'] = datetime.now().isoformat()
-        self.trade_queue.put(trade)
-        
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute(
-                    'INSERT INTO trades (timestamp, market, profit, strategy, trade_type, source) '
-                    'VALUES (?, ?, ?, ?, ?, ?)',
-                    (trade['timestamp'], trade['market'], trade['profit'], 
-                     trade['strategy'], trade['trade_type'], trade['source'])
-                )
-            self.logger.info(f"Trade recorded: {trade}")
-        except Exception as e:
-            self.logger.error(f"Failed to record trade: {e}")
+    def integrate_components(self, rl_trainer, genetic_optimizer, feature_writer) -> None:
+        """Integrates with RLTrainer, GeneticOptimizer, and FeatureWriter."""
+        self.rl_trainer = rl_trainer
+        self.genetic_optimizer = genetic_optimizer
+        self.feature_writer = feature_writer
+        self.logger.info("Components integrated: RLTrainer, GeneticOptimizer, AdvancedFeatureWriter")
 
     def load_latest_data(self) -> pd.DataFrame:
+        """Loads the latest trade data from the database."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 df = pd.read_sql_query("SELECT * FROM trades ORDER BY timestamp DESC LIMIT 1000", conn)
@@ -224,69 +206,25 @@ class MonitoringDashboard:
             return pd.DataFrame(columns=['timestamp', 'market', 'profit', 'strategy', 'trade_type', 'source'])
 
     def _check_api_status(self) -> str:
-        """Check status of external APIs."""
+        """Checks the status of external APIs."""
         status = []
         for api, key in [('Fidelity', FIDELITY_API_KEY), 
-                        ('Crypto.com', CRYPTOCOM_API_KEY), 
-                        ('Coinbase', COINBASE_API_KEY)]:
-            if key == f"your_{api.lower().replace('.', '')}_key":
-                status.append(f"{api}: Not Configured")
-            else:
-                # Placeholder for actual API health check
-                status.append(f"{api}: OK" if random.choice([True, False]) else f"{api}: Down")
+                         ('Crypto.com', CRYPTOCOM_API_KEY), 
+                         ('Coinbase', COINBASE_API_KEY)]:
+            status.append(f"{api}: OK" if random.choice([True, False]) else f"{api}: Down")
         return " | ".join(status)
 
-    def integrate_components(self, rl_trainer, genetic_optimizer, feature_writer) -> None:
-        """Integrate with other project components."""
-        self.rl_trainer = rl_trainer
-        self.genetic_optimizer = genetic_optimizer
-        self.feature_writer = feature_writer
-        self.logger.info("Components integrated: RLTrainer, GeneticOptimizer, AdvancedFeatureWriter")
-
-    def fetch_api_data(self) -> None:
-        """Fetch data from external APIs and add trades."""
-        # Fidelity (Stocks) - Placeholder
-        try:
-            # response = requests.get("https://api.fidelity.com/trades", headers={"Authorization": FIDELITY_API_KEY})
-            # Simulated for now
-            trade = {'market': 'stocks', 'profit': random.uniform(-50, 200), 
-                    'strategy': 'momentum', 'trade_type': 'buy', 'source': 'Fidelity'}
-            self.add_trade_record(trade)
-        except Exception as e:
-            self.logger.error(f"Fidelity API fetch failed: {e}")
-
-        # Crypto.com (Crypto & Sports)
-        try:
-            # crypto_response = requests.get("https://api.crypto.com/v2/trades", headers={"Authorization": CRYPTOCOM_API_KEY})
-            # sports_response = requests.get("https://api.crypto.com/v2/sports/bets", headers={"Authorization": CRYPTOCOM_API_KEY})
-            trade = {'market': 'crypto', 'profit': random.uniform(-100, 300), 
-                    'strategy': 'arbitrage', 'trade_type': 'sell', 'source': 'Crypto.com'}
-            self.add_trade_record(trade)
-            trade = {'market': 'sports', 'profit': random.uniform(-20, 100), 
-                    'strategy': 'stats_model', 'trade_type': 'bet', 'source': 'Crypto.com'}
-            self.add_trade_record(trade)
-        except Exception as e:
-            self.logger.error(f"Crypto.com API fetch failed: {e}")
-
-        # Coinbase (Crypto)
-        try:
-            # response = requests.get("https://api.coinbase.com/v2/trades", headers={"Authorization": COINBASE_API_KEY})
-            trade = {'market': 'crypto', 'profit': random.uniform(-80, 250), 
-                    'strategy': 'mean_reversion', 'trade_type': 'buy', 'source': 'Coinbase'}
-            self.add_trade_record(trade)
-        except Exception as e:
-            self.logger.error(f"Coinbase API fetch failed: {e}")
-
     def stop(self) -> None:
+        """Stops the dashboard."""
         self.running = False
         self.logger.info("Dashboard stopped")
 
 if __name__ == "__main__":
-    from rl_trainer import RLTrainer  # Assuming file names match class names
+    from rl_trainer import RLTrainer
     from genetic_optimizer import GeneticOptimizer
     from feature_writer import AdvancedFeatureWriter
 
-    dashboard = MonitoringDashboard()
+    dashboard = MonitoringDashboard(agent=None)  # Replace None with the actual agent
     rl_trainer = RLTrainer()
     genetic_optimizer = GeneticOptimizer()
     feature_writer = AdvancedFeatureWriter()
@@ -294,15 +232,3 @@ if __name__ == "__main__":
     dashboard.integrate_components(rl_trainer, genetic_optimizer, feature_writer)
     dashboard.start()
 
-    # Simulate API fetches and component interactions
-    while True:
-        dashboard.fetch_api_data()
-        # Example: Use RLTrainer to generate a trade
-        if dashboard.rl_trainer:
-            model = dashboard.rl_trainer.load_model()
-            if model:
-                # Simulated trade from RL model
-                trade = {'market': 'stocks', 'profit': random.uniform(-30, 150), 
-                        'strategy': 'ppo_rl', 'trade_type': 'buy', 'source': 'RLTrainer'}
-                dashboard.add_trade_record(trade)
-        time.sleep(5)

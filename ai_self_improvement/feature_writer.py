@@ -154,8 +154,8 @@ class AdvancedFeatureWriter:
             max_drawdown = min(running_balance) if running_balance else 0
             
             # Additional metrics
-            max_drawdown = min(0, min([sum(results[:i+1], {}).get('profit', 0) 
-                                     for i in range(len(results))] or [0]))
+            cumulative_profits = [sum(trade.get('profit', 0) for trade in results[:i+1]) for i in range(len(results))]
+            max_drawdown = min(cumulative_profits) if cumulative_profits else 0.0
             return {
                 'profitability': profitability,
                 'success_rate': success_rate,

@@ -13,8 +13,9 @@ import asyncio
 from datetime import datetime
 import requests  # For API calls
 import random  # For simulation (remove in production)
+from ai_self_improvement.training_data_generator import get_training_sample_stats, TrainingDataGenerator
+import json
 
-# Placeholder API credentials (replace with actual keys from your config)
 FIDELITY_API_KEY = "your_fidelity_key"
 CRYPTOCOM_API_KEY = "your_cryptocom_key"
 COINBASE_API_KEY = "your_coinbase_key"
@@ -38,13 +39,13 @@ class MonitoringDashboard:
         self.db_path = db_path
         self.update_interval = update_interval
         self.running = False
-        self.training_mode = False  # Track training mode status
-        self.daily_goal = 10000  # $10,000 daily profit goal
-        self.rl_trainer = None  # Placeholder for RLTrainer integration
-        self.genetic_optimizer = None  # Placeholder for GeneticOptimizer
-        self.feature_writer = None  # Placeholder for AdvancedFeatureWriter
+        self.training_mode = False
+        self.daily_goal = 10000
+        self.rl_trainer = None
+        self.genetic_optimizer = None
+        self.feature_writer = None
         self._init_db()
-        
+
         self.app.layout = html.Div([
             html.H1("AI Trading Dashboard - Agents-o-Fun", style={'textAlign': 'center'}),
             dcc.Graph(id='profit-graph'),
@@ -63,15 +64,37 @@ class MonitoringDashboard:
             html.Button("Retry Health Check", id="retry-health-btn", n_clicks=0),
             html.Div(id="training-status"),
             html.Div(id="health-status"),
+            dcc.Dropdown(
+                id="training-mode-select",
+                options=[
+                    {"label": "Default", "value": "default"},
+                    {"label": "Anomaly Injection", "value": "anomaly"},
+                    {"label": "Market Bias", "value": "market_bias"}
+                ],
+                value="default",
+                placeholder="Select Training Mode"
+            ),
+            html.Button("Generate Custom Training Set", id="custom-generate-btn"),
+
+            html.H4("🧠 Training Sample Manager"),
+            dcc.Dropdown(id="sample-tag-dropdown", options=[], placeholder="Choose a tag"),
+            html.Button("Refresh Samples", id="refresh-samples-btn", n_clicks=0),
+            html.Div(id="sample-preview-panel", style={"whiteSpace": "pre-wrap", "border": "1px solid #ccc", "padding": "1rem", "borderRadius": "10px"}),
+
+            html.Div([
+                html.H4("Training Data Overview"),
+                html.Div(id='training-data-stats'),
+                html.Button("Generate New Training Set", id="generate-training-btn", n_clicks=0),
+                dcc.Interval(id="training-data-refresh", interval=60*1000, n_intervals=0)
+            ]),
             dcc.Interval(id='interval-component', interval=update_interval, n_intervals=0),
-            dcc.Store(id="mode-store"),  # Stores training mode state
+            dcc.Store(id="mode-store"),
             dcc.Store(id='trade-data-store')
         ])
 
         self._register_callbacks()
 
     def _init_db(self) -> None:
-        """Initializes the trades database."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute('''
                 CREATE TABLE IF NOT EXISTS trades (
@@ -81,7 +104,7 @@ class MonitoringDashboard:
                     profit REAL,
                     strategy TEXT,
                     trade_type TEXT,
-                    source TEXT  -- Added to track Fidelity, Crypto.com, etc.
+                    source TEXT
                 )
             ''')
         self.logger.info("Database initialized successfully")
@@ -90,16 +113,17 @@ class MonitoringDashboard:
         @self.app.callback(
             [Output("training-status", "children"),
              Output("current-mode", "children"),
-             Output("mode-store", "data")],
-            [Input("toggle-train-btn", "n_clicks")],
+             Output("mode-store", "data"),
+             Output("training-data-stats", "children")],
+            [Input("toggle-train-btn", "n_clicks"),
+             Input("training-data-refresh", "n_intervals"),
+             Input("generate-training-btn", "n_clicks")],
             [State("mode-store", "data")],
             prevent_initial_call=True
         )
         def toggle_training(n_clicks, mode_state):
-            """Toggle training mode and update display."""
             if mode_state is None:
                 mode_state = {"training_mode": False}
-            
             mode_state["training_mode"] = not mode_state["training_mode"]
             self.training_mode = mode_state["training_mode"]
 
@@ -110,18 +134,37 @@ class MonitoringDashboard:
                 self.logger.info("Starting Training Mode...")
                 threading.Thread(target=self.agent.train_only_mode, daemon=True).start()
 
-            return f"Training Mode: {mode_text}", f"Mode: {mode_text}", mode_state
+            stats = get_training_sample_stats()
+            return f"Training Mode: {mode_text}", f"Mode: {mode_text}", mode_state, html.Ul([
+                html.Li(f"Total Samples: {stats['total_samples']}"),
+                html.Li("By Tag:"),
+                html.Ul([html.Li(f"{tag}: {count}") for tag, count in stats["tags"].items()])
+            ])
 
         @self.app.callback(
-            Output("health-status", "children"),
-            [Input("retry-health-btn", "n_clicks")],
+            Output("sample-tag-dropdown", "options"),
+            Input("refresh-samples-btn", "n_clicks"),
             prevent_initial_call=True
         )
-        def retry_health_check(n_clicks):
-            """Retry system health check asynchronously."""
-            self.logger.info("Retrying system health check...")
-            health_ok = asyncio.run(self.agent.health_check())  # Properly await the function
-            return f"Health Check: {'PASS' if health_ok else 'FAIL'}"
+        def update_tag_dropdown(_):
+            try:
+                tags = self.agent.training_data_generator.get_available_tags()
+                return [{"label": tag, "value": tag} for tag in tags]
+            except Exception as e:
+                return []
+
+        @self.app.callback(
+            Output("sample-preview-panel", "children"),
+            Input("refresh-samples-btn", "n_clicks"),
+            State("sample-tag-dropdown", "value")
+        )
+        def display_sample_preview(n_clicks, selected_tag):
+            if not selected_tag:
+                return "No tag selected."
+
+            samples = self.agent.training_data_generator.get_samples_by_tag(selected_tag)
+            preview = samples[:5]
+            return f"Total Samples: {len(samples)}\nPreview:\n{json.dumps(preview, indent=2)}"
 
     def start(self) -> None:
         if not self.running:
@@ -139,14 +182,12 @@ class MonitoringDashboard:
             self.running = False
 
     def integrate_components(self, rl_trainer, genetic_optimizer, feature_writer) -> None:
-        """Integrates with RLTrainer, GeneticOptimizer, and FeatureWriter."""
         self.rl_trainer = rl_trainer
         self.genetic_optimizer = genetic_optimizer
         self.feature_writer = feature_writer
         self.logger.info("Components integrated: RLTrainer, GeneticOptimizer, AdvancedFeatureWriter")
 
     def load_latest_data(self) -> pd.DataFrame:
-        """Loads the latest trade data from the database."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 df = pd.read_sql_query("SELECT * FROM trades ORDER BY timestamp DESC LIMIT 1000", conn)
@@ -159,7 +200,6 @@ class MonitoringDashboard:
             return pd.DataFrame(columns=['timestamp', 'market', 'profit', 'strategy', 'trade_type', 'source'])
 
     def _check_api_status(self) -> str:
-        """Checks the status of external APIs."""
         status = []
         for api, key in [('Fidelity', FIDELITY_API_KEY), 
                          ('Crypto.com', CRYPTOCOM_API_KEY), 
@@ -168,7 +208,6 @@ class MonitoringDashboard:
         return " | ".join(status)
 
     def stop(self) -> None:
-        """Stops the dashboard."""
         self.running = False
         self.logger.info("Dashboard stopped")
 
@@ -177,11 +216,11 @@ if __name__ == "__main__":
     from genetic_optimizer import GeneticOptimizer
     from feature_writer import AdvancedFeatureWriter
 
-    dashboard = MonitoringDashboard(agent=None)  # Replace None with the actual agent
+    dashboard = MonitoringDashboard(agent=None)
     rl_trainer = RLTrainer()
     genetic_optimizer = GeneticOptimizer()
     feature_writer = AdvancedFeatureWriter()
-    
+
     dashboard.integrate_components(rl_trainer, genetic_optimizer, feature_writer)
     dashboard.start()
 
