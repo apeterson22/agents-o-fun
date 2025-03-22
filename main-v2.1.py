@@ -7,23 +7,21 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 import requests
 import sys
-import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-
-from dashboards.monitoring import MonitoringDashboard
-from ai_self_improvement.reinforcement_learning import RLTrainer
-from ai_self_improvement.feature_writer import AdvancedFeatureWriter
-from ai_self_improvement.genetic_algo import GeneticOptimizer
-from ai_self_improvement.training_data_generator import TrainingDataGenerator
-from utils.stats_tracker import SharedStatsTracker
 from core.api_interface import FidelityAPI
 from core.crypto_interface import CryptoAPI
 from core.betting_interface import BettingAPI
 from core.trading_engine import TradingEngine
 from core.risk_manager import RiskManager
 from core.regulatory_compliance import RegulatoryCompliance
+from ai_self_improvement.feature_writer import AdvancedFeatureWriter
+from dashboards.monitoring import MonitoringDashboard
+from ai_self_improvement.reinforcement_learning import RLTrainer
+from ai_self_improvement.genetic_algo import GeneticOptimizer
+from ai_self_improvement.training_data_generator import TrainingDataGenerator
+from utils.stats_tracker import SharedStatsTracker
 from dotenv import load_dotenv
 
 sys.setrecursionlimit(10000)
@@ -102,39 +100,15 @@ class TradingAgent:
             if self.ai_provider.lower() == 'ollama':
                 from ollama import Client
                 self.ai_client = Client(host=self.ai_endpoint)
-                model_list = self.ai_client.list().get("models", [])
-                available_models = [m.get("name") for m in model_list if m.get("name")]
-
-                if available_models:
-                    self.config.set('AI', 'available_models', ",".join(available_models))
-                    with open('config.ini', 'w') as configfile:
-                        self.config.write(configfile)
-
-                selected_model = self.config.get('AI', 'model', fallback=available_models[0] if available_models else 'deepseek-r1:8b')
-                response = self.ai_client.generate(model=selected_model, prompt="test")
+                model_name = self.config.get('AI', 'model')
+                response = self.ai_client.generate(model=model_name, prompt="test")
                 if 'response' not in response:
                     raise ConnectionError("Ollama server not responding correctly")
-
             elif self.ai_provider.lower() == 'openai':
-                response = requests.get(
-                    "https://api.openai.com/v1/models",
-                    headers={"Authorization": f"Bearer {self.ai_api_key}"}
-                )
-                if response.status_code == 200:
-                    models = response.json().get("data", [])
-                    available_models = [m.get("id") for m in models if m.get("id")]
-                    if available_models:
-                        self.config.set('AI', 'available_models', ",".join(available_models))
-                        with open('config.ini', 'w') as configfile:
-                            self.config.write(configfile)
-                else:
-                    raise ConnectionError("Failed to retrieve OpenAI models")
-
-                model_name = self.config.get('AI', 'model', fallback='text-davinci-003')
                 self.ai_client = lambda prompt: requests.post(
                     "https://api.openai.com/v1/completions",
                     headers={"Authorization": f"Bearer {self.ai_api_key}"},
-                    json={"model": model_name, "prompt": prompt, "max_tokens": 500}
+                    json={"model": "text-davinci-003", "prompt": prompt, "max_tokens": 500}
                 ).json()
             else:
                 raise ValueError(f"Unsupported AI provider: {self.ai_provider}")

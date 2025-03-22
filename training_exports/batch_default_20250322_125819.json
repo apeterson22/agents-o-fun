@@ -1,0 +1,2102 @@
+[
+    {
+        "market": "stocks",
+        "profit": 194.34803804386308,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 188.55587758577943
+    },
+    {
+        "market": "crypto",
+        "profit": 180.21370289914842,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 166.61482256022916
+    },
+    {
+        "market": "stocks",
+        "profit": 160.57609836899172,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 168.2963904555563
+    },
+    {
+        "market": "stocks",
+        "profit": 245.03755495236948,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 255.73772980084405
+    },
+    {
+        "market": "sports",
+        "profit": 14.509608031719608,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 16.42345164491058
+    },
+    {
+        "market": "sports",
+        "profit": -80.9025318839399,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": -87.41571455394663
+    },
+    {
+        "market": "stocks",
+        "profit": 155.17136307837904,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 145.63676958089934
+    },
+    {
+        "market": "crypto",
+        "profit": 222.69153496335974,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 246.59429192626172
+    },
+    {
+        "market": "sports",
+        "profit": 85.26131216803972,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 99.08179799879348
+    },
+    {
+        "market": "sports",
+        "profit": -56.163327726538355,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -45.62079804150309
+    },
+    {
+        "market": "sports",
+        "profit": 208.68738293578366,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 187.61756209347777
+    },
+    {
+        "market": "crypto",
+        "profit": -51.9490320004853,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -53.07207120225733
+    },
+    {
+        "market": "crypto",
+        "profit": 76.644494372395,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 78.67129401001628
+    },
+    {
+        "market": "stocks",
+        "profit": 171.94134110247148,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 147.46024812626527
+    },
+    {
+        "market": "stocks",
+        "profit": 52.10529353655042,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 53.01940041840761
+    },
+    {
+        "market": "stocks",
+        "profit": 179.82911590911914,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 171.78436164129337
+    },
+    {
+        "market": "stocks",
+        "profit": 88.72151257908732,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 74.08130403324805
+    },
+    {
+        "market": "sports",
+        "profit": 115.37190304437917,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 134.78130441867
+    },
+    {
+        "market": "crypto",
+        "profit": 270.830533494495,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 217.3289367623681
+    },
+    {
+        "market": "crypto",
+        "profit": -54.23746775597715,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": -55.392036540329826
+    },
+    {
+        "market": "stocks",
+        "profit": 257.9707534833034,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 269.54047082356516
+    },
+    {
+        "market": "crypto",
+        "profit": 84.05690025270371,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 72.24550630954775
+    },
+    {
+        "market": "stocks",
+        "profit": 182.611826926169,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 198.87354502101357
+    },
+    {
+        "market": "crypto",
+        "profit": -24.112806996531774,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -21.560040656580924
+    },
+    {
+        "market": "sports",
+        "profit": -46.3483016172654,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": -51.97745252890945
+    },
+    {
+        "market": "crypto",
+        "profit": 20.484732709311743,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 21.561693163754008
+    },
+    {
+        "market": "sports",
+        "profit": 70.1619549169946,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 64.54349318233413
+    },
+    {
+        "market": "crypto",
+        "profit": 205.39027686875835,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 225.51935151223708
+    },
+    {
+        "market": "crypto",
+        "profit": 142.28048426785435,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 128.17457161215893
+    },
+    {
+        "market": "crypto",
+        "profit": 167.2312140869724,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 195.07490053663972
+    },
+    {
+        "market": "stocks",
+        "profit": 27.315531792798396,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 29.28438513240794
+    },
+    {
+        "market": "stocks",
+        "profit": 189.01400188748727,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 193.5333489945194
+    },
+    {
+        "market": "sports",
+        "profit": -65.34559440241082,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -52.460215237028166
+    },
+    {
+        "market": "stocks",
+        "profit": 130.7075764799857,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 132.09317895068043
+    },
+    {
+        "market": "sports",
+        "profit": -90.47946273214595,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -91.52861573518753
+    },
+    {
+        "market": "sports",
+        "profit": -2.135084569925951,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -1.7700180754028003
+    },
+    {
+        "market": "stocks",
+        "profit": 4.530590675384971,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 4.211800685884315
+    },
+    {
+        "market": "sports",
+        "profit": 277.8474148802036,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 321.33409271528916
+    },
+    {
+        "market": "stocks",
+        "profit": 288.78757609792194,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 336.6355916457683
+    },
+    {
+        "market": "crypto",
+        "profit": -12.802127667241692,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -13.57586146046795
+    },
+    {
+        "market": "sports",
+        "profit": 123.8460456148828,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 146.9382966910993
+    },
+    {
+        "market": "sports",
+        "profit": -16.372751162141654,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": -17.465056896852055
+    },
+    {
+        "market": "sports",
+        "profit": 262.26483219418395,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 302.86457718724336
+    },
+    {
+        "market": "stocks",
+        "profit": 157.12823114737336,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 149.3529887703281
+    },
+    {
+        "market": "stocks",
+        "profit": 7.710016473378317,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 6.2692202521827225
+    },
+    {
+        "market": "stocks",
+        "profit": 72.6222088244823,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 60.20045281465517
+    },
+    {
+        "market": "sports",
+        "profit": 110.3565002671211,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 127.7705044193369
+    },
+    {
+        "market": "crypto",
+        "profit": 45.48279362784032,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 41.505583030319535
+    },
+    {
+        "market": "stocks",
+        "profit": 297.9645521904067,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 310.3650162561395
+    },
+    {
+        "market": "sports",
+        "profit": 27.961512189832092,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 22.62511087275879
+    },
+    {
+        "market": "crypto",
+        "profit": 223.46680606556606,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 259.62220404919174
+    },
+    {
+        "market": "crypto",
+        "profit": 32.908476860226614,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 32.3263865945084
+    },
+    {
+        "market": "sports",
+        "profit": 177.04690206695915,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 211.03271209173585
+    },
+    {
+        "market": "sports",
+        "profit": 71.91861188929863,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 67.81919248933183
+    },
+    {
+        "market": "sports",
+        "profit": 128.1774055161487,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 104.21658998258401
+    },
+    {
+        "market": "sports",
+        "profit": 65.22568777229384,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 58.36413380185253
+    },
+    {
+        "market": "sports",
+        "profit": 115.24703726937653,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 100.44541826844882
+    },
+    {
+        "market": "crypto",
+        "profit": 193.134542254822,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 174.2134292423574
+    },
+    {
+        "market": "sports",
+        "profit": 188.59196595169612,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 196.3664562711846
+    },
+    {
+        "market": "stocks",
+        "profit": 120.29743824043351,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 136.57997396890326
+    },
+    {
+        "market": "crypto",
+        "profit": 95.95047550818788,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 108.51326490684933
+    },
+    {
+        "market": "sports",
+        "profit": 64.06361251253628,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 52.78876990963371
+    },
+    {
+        "market": "sports",
+        "profit": -73.11789908084832,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -78.13332711010008
+    },
+    {
+        "market": "sports",
+        "profit": 213.264180196065,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 202.90659794535455
+    },
+    {
+        "market": "sports",
+        "profit": 227.27174852865744,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 260.11021911857034
+    },
+    {
+        "market": "crypto",
+        "profit": 47.57460890704297,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 40.0427047311324
+    },
+    {
+        "market": "crypto",
+        "profit": 246.02998024721626,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 256.37833216217064
+    },
+    {
+        "market": "sports",
+        "profit": 176.83337839141353,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 167.4767757739161
+    },
+    {
+        "market": "crypto",
+        "profit": 186.7187631747542,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 222.7934808971085
+    },
+    {
+        "market": "stocks",
+        "profit": -1.8052220259612284,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -1.9913303642177997
+    },
+    {
+        "market": "crypto",
+        "profit": -66.2595991118732,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -55.418042337872
+    },
+    {
+        "market": "sports",
+        "profit": 241.95560577417677,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 254.77175617033797
+    },
+    {
+        "market": "stocks",
+        "profit": 232.94641077307256,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 199.84369790892737
+    },
+    {
+        "market": "crypto",
+        "profit": -17.41578893189066,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -19.6333528583634
+    },
+    {
+        "market": "stocks",
+        "profit": 82.7649915430948,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 90.28886629928266
+    },
+    {
+        "market": "sports",
+        "profit": 283.0504618366611,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 267.64274806206566
+    },
+    {
+        "market": "sports",
+        "profit": 277.4803637137061,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 246.299908310329
+    },
+    {
+        "market": "crypto",
+        "profit": 89.05860215108743,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 77.09865485744264
+    },
+    {
+        "market": "crypto",
+        "profit": 53.87438933221733,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 50.15254811975335
+    },
+    {
+        "market": "stocks",
+        "profit": 19.730984050920057,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 19.960604188899186
+    },
+    {
+        "market": "stocks",
+        "profit": 122.14179074786585,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 134.94151985149128
+    },
+    {
+        "market": "crypto",
+        "profit": 293.24290195440767,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 340.0533683777232
+    },
+    {
+        "market": "sports",
+        "profit": 69.04356351636443,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 79.4574105087649
+    },
+    {
+        "market": "crypto",
+        "profit": -93.00519873674551,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -80.70122434944946
+    },
+    {
+        "market": "stocks",
+        "profit": -31.60837854074643,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -31.842930302246472
+    },
+    {
+        "market": "sports",
+        "profit": -17.405704675038606,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -18.505109104276453
+    },
+    {
+        "market": "stocks",
+        "profit": 226.57173887688225,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 204.4115560330224
+    },
+    {
+        "market": "stocks",
+        "profit": 266.2989992646382,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 273.2387811034942
+    },
+    {
+        "market": "sports",
+        "profit": 216.2840696896987,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 176.15220799717736
+    },
+    {
+        "market": "stocks",
+        "profit": 144.05440278852208,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 120.60873230052317
+    },
+    {
+        "market": "sports",
+        "profit": 105.92564893944848,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 112.02218431240844
+    },
+    {
+        "market": "sports",
+        "profit": 167.68054474037035,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 194.25843198651617
+    },
+    {
+        "market": "crypto",
+        "profit": 105.15576476063805,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 118.35139170425279
+    },
+    {
+        "market": "sports",
+        "profit": -28.189375049650337,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -32.540887128323256
+    },
+    {
+        "market": "stocks",
+        "profit": -48.88028710949861,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -48.863824918832734
+    },
+    {
+        "market": "crypto",
+        "profit": 234.01196621314068,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 198.25342160024934
+    },
+    {
+        "market": "crypto",
+        "profit": 281.0704714902356,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 302.584995629466
+    },
+    {
+        "market": "stocks",
+        "profit": 14.257635900664226,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 13.148943955942032
+    },
+    {
+        "market": "crypto",
+        "profit": 201.57969946015913,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 184.0390257329416
+    },
+    {
+        "market": "crypto",
+        "profit": 198.58848698632607,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 223.52665812667848
+    },
+    {
+        "market": "crypto",
+        "profit": 211.545883128541,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 183.52369440847247
+    },
+    {
+        "market": "sports",
+        "profit": -12.798429776010423,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": -15.306085519689962
+    },
+    {
+        "market": "stocks",
+        "profit": 84.15840394448733,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 98.11793642293753
+    },
+    {
+        "market": "crypto",
+        "profit": 260.3616599547023,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 292.7468252925984
+    },
+    {
+        "market": "stocks",
+        "profit": -36.17449184867323,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": -34.06844715476616
+    },
+    {
+        "market": "crypto",
+        "profit": 14.714832181720766,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 17.037386374368122
+    },
+    {
+        "market": "stocks",
+        "profit": 299.2889716987357,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 255.13368263668374
+    },
+    {
+        "market": "stocks",
+        "profit": 288.4114151687747,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 325.6994405092417
+    },
+    {
+        "market": "crypto",
+        "profit": -81.49088976164265,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -90.2753698377987
+    },
+    {
+        "market": "crypto",
+        "profit": 24.74350287036455,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 25.818091739229615
+    },
+    {
+        "market": "stocks",
+        "profit": 296.8068216654285,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 329.23133175233414
+    },
+    {
+        "market": "crypto",
+        "profit": 196.13332849770546,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 159.08564451796443
+    },
+    {
+        "market": "stocks",
+        "profit": -7.843920334260673,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -7.3078513088821575
+    },
+    {
+        "market": "crypto",
+        "profit": 34.72471938681423,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 33.697995222908894
+    },
+    {
+        "market": "stocks",
+        "profit": -99.87802941559951,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -87.64170315967998
+    },
+    {
+        "market": "sports",
+        "profit": 186.6030641630092,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 213.00953670242126
+    },
+    {
+        "market": "crypto",
+        "profit": 280.24359602294066,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 328.86657904175166
+    },
+    {
+        "market": "sports",
+        "profit": 296.79595625285737,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 271.5450136490602
+    },
+    {
+        "market": "sports",
+        "profit": 122.96767971584796,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 123.60944434225823
+    },
+    {
+        "market": "stocks",
+        "profit": -22.903510636109388,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -25.357608819184698
+    },
+    {
+        "market": "sports",
+        "profit": -22.44462253185415,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -25.416942831581117
+    },
+    {
+        "market": "sports",
+        "profit": 3.039327061963263,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 2.588345126953372
+    },
+    {
+        "market": "crypto",
+        "profit": -12.341473942320562,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -10.531695280292457
+    },
+    {
+        "market": "stocks",
+        "profit": 171.1003095938956,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 184.32692331413855
+    },
+    {
+        "market": "sports",
+        "profit": 253.1106146277525,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 241.5578337899785
+    },
+    {
+        "market": "crypto",
+        "profit": 138.22600517200308,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 133.99022473018488
+    },
+    {
+        "market": "sports",
+        "profit": -18.609042695372537,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -16.88601846999117
+    },
+    {
+        "market": "crypto",
+        "profit": 175.7675103628942,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 157.95617477268308
+    },
+    {
+        "market": "crypto",
+        "profit": 183.5074837081134,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 171.88459508262366
+    },
+    {
+        "market": "stocks",
+        "profit": 295.5776802793808,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 339.22331097034663
+    },
+    {
+        "market": "stocks",
+        "profit": 278.883960663763,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 324.5338560179447
+    },
+    {
+        "market": "stocks",
+        "profit": -27.7765571181193,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -31.420246982145475
+    },
+    {
+        "market": "crypto",
+        "profit": 23.628766981284727,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 19.1782199675349
+    },
+    {
+        "market": "sports",
+        "profit": 32.08732218141216,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 33.62564862470034
+    },
+    {
+        "market": "crypto",
+        "profit": -91.54129706500056,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -75.05160042938982
+    },
+    {
+        "market": "crypto",
+        "profit": 53.29998369257285,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 51.21076508759366
+    },
+    {
+        "market": "crypto",
+        "profit": 7.874709786078512,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 8.126837823663024
+    },
+    {
+        "market": "stocks",
+        "profit": 218.61682437957973,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 194.27363205480495
+    },
+    {
+        "market": "sports",
+        "profit": 164.06667098024548,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 186.8779067298958
+    },
+    {
+        "market": "sports",
+        "profit": 76.36770569378518,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 63.166726785418305
+    },
+    {
+        "market": "crypto",
+        "profit": 97.20205837567045,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 98.75866698421073
+    },
+    {
+        "market": "stocks",
+        "profit": 36.6875522553446,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 32.179935267242115
+    },
+    {
+        "market": "stocks",
+        "profit": 181.4040706689459,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 181.78549544951144
+    },
+    {
+        "market": "stocks",
+        "profit": 160.09411642699388,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 143.880022276799
+    },
+    {
+        "market": "stocks",
+        "profit": 10.852232735758307,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 10.444513193627643
+    },
+    {
+        "market": "sports",
+        "profit": 279.8229576261884,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 282.9128323495631
+    },
+    {
+        "market": "sports",
+        "profit": 89.82843786985373,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 105.00454508406261
+    },
+    {
+        "market": "stocks",
+        "profit": -63.945147221831135,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -52.54308839942431
+    },
+    {
+        "market": "stocks",
+        "profit": 211.1471747888774,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 220.85799946418166
+    },
+    {
+        "market": "stocks",
+        "profit": -9.400284247726319,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -8.26859540357955
+    },
+    {
+        "market": "sports",
+        "profit": 82.10607767098622,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 78.23666737604019
+    },
+    {
+        "market": "crypto",
+        "profit": -99.17589792029658,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -104.44516040430162
+    },
+    {
+        "market": "crypto",
+        "profit": 46.0800881845563,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 42.90218875777524
+    },
+    {
+        "market": "stocks",
+        "profit": -69.3637802811776,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": -71.37457766364251
+    },
+    {
+        "market": "sports",
+        "profit": -62.095242747072945,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -55.93389548224821
+    },
+    {
+        "market": "crypto",
+        "profit": 33.956883996916616,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 37.64841350190713
+    },
+    {
+        "market": "stocks",
+        "profit": -46.23882669917445,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -45.95452558977975
+    },
+    {
+        "market": "crypto",
+        "profit": 61.29035590034189,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 69.90707662647769
+    },
+    {
+        "market": "stocks",
+        "profit": -87.66232618140673,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -99.3014262810197
+    },
+    {
+        "market": "crypto",
+        "profit": -46.2660448005404,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -52.80007123651059
+    },
+    {
+        "market": "stocks",
+        "profit": -47.84603080490846,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -50.194682852102346
+    },
+    {
+        "market": "stocks",
+        "profit": 92.20167403571097,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 84.1134872415683
+    },
+    {
+        "market": "sports",
+        "profit": 43.49604808282771,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 44.49551019471663
+    },
+    {
+        "market": "sports",
+        "profit": 153.51838254452122,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 154.4442003597316
+    },
+    {
+        "market": "crypto",
+        "profit": 66.98194082842627,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 55.639325337578306
+    },
+    {
+        "market": "sports",
+        "profit": 43.48799175727726,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 46.63051841436028
+    },
+    {
+        "market": "sports",
+        "profit": 163.75173210345093,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 149.31103799877235
+    },
+    {
+        "market": "stocks",
+        "profit": 291.6307316722327,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 268.5743286715501
+    },
+    {
+        "market": "stocks",
+        "profit": 198.25241244647486,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 177.28517322884258
+    },
+    {
+        "market": "sports",
+        "profit": 15.314283676723676,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 12.598357668430937
+    },
+    {
+        "market": "stocks",
+        "profit": 158.2421130126188,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 138.7473093315681
+    },
+    {
+        "market": "stocks",
+        "profit": -51.95045510701166,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -44.18374442674526
+    },
+    {
+        "market": "crypto",
+        "profit": 90.95401012369445,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 78.73859023508486
+    },
+    {
+        "market": "sports",
+        "profit": 292.65825569127924,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 319.4041650654115
+    },
+    {
+        "market": "crypto",
+        "profit": -61.2039062663531,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -49.32341598474861
+    },
+    {
+        "market": "crypto",
+        "profit": 250.97865446517613,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 296.86389774125087
+    },
+    {
+        "market": "sports",
+        "profit": 90.13459782637008,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 107.0149870946828
+    },
+    {
+        "market": "sports",
+        "profit": -64.64100595624735,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": -67.66190234764271
+    },
+    {
+        "market": "crypto",
+        "profit": -42.241150460106034,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -42.300841550642915
+    },
+    {
+        "market": "stocks",
+        "profit": -86.26966922284893,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -78.27940769716689
+    },
+    {
+        "market": "stocks",
+        "profit": 129.51548099783827,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 109.97497590387206
+    },
+    {
+        "market": "crypto",
+        "profit": 233.84497843958457,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 190.35269643256268
+    },
+    {
+        "market": "sports",
+        "profit": 226.49293177782647,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 181.99865695666975
+    },
+    {
+        "market": "sports",
+        "profit": -44.53604626142243,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": -50.663541805901815
+    },
+    {
+        "market": "crypto",
+        "profit": 184.4399618919818,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 187.96879184223394
+    },
+    {
+        "market": "crypto",
+        "profit": 43.01537393385098,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 48.640064843643856
+    },
+    {
+        "market": "crypto",
+        "profit": 185.1262760971344,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 157.86359319457333
+    },
+    {
+        "market": "crypto",
+        "profit": -42.474031044041105,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": -50.84352658197289
+    },
+    {
+        "market": "sports",
+        "profit": 76.89604892184207,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 75.69686151317963
+    },
+    {
+        "market": "crypto",
+        "profit": 25.447335863475516,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 24.407605203975148
+    },
+    {
+        "market": "stocks",
+        "profit": 199.0345298785768,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 209.60500359685938
+    },
+    {
+        "market": "sports",
+        "profit": 141.07657676420789,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 140.95964596787533
+    },
+    {
+        "market": "crypto",
+        "profit": -31.832041126863146,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -27.536318209915212
+    },
+    {
+        "market": "sports",
+        "profit": 77.38218674328166,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 76.70631776485763
+    },
+    {
+        "market": "sports",
+        "profit": -23.599816961053534,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -24.142838042913787
+    },
+    {
+        "market": "sports",
+        "profit": 70.74170979089288,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 72.03412252679149
+    },
+    {
+        "market": "stocks",
+        "profit": -55.04245620105594,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -52.87326449978715
+    },
+    {
+        "market": "sports",
+        "profit": -34.475585654279996,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -34.96864458766967
+    },
+    {
+        "market": "sports",
+        "profit": -49.36866072800434,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -53.962055693549026
+    },
+    {
+        "market": "stocks",
+        "profit": 204.85001739659054,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 199.74993944960198
+    },
+    {
+        "market": "sports",
+        "profit": 175.82540712289273,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 170.5043895707867
+    },
+    {
+        "market": "sports",
+        "profit": 65.07047195488536,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 77.2890023366748
+    },
+    {
+        "market": "sports",
+        "profit": 59.970341466763614,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 61.36255564529375
+    },
+    {
+        "market": "crypto",
+        "profit": 236.65283729272818,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 222.25555534147412
+    },
+    {
+        "market": "sports",
+        "profit": 41.49952712463417,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 44.39284406446829
+    },
+    {
+        "market": "crypto",
+        "profit": 55.39536085595995,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 56.2416933715674
+    },
+    {
+        "market": "crypto",
+        "profit": 121.41123320645062,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 141.50147190184336
+    },
+    {
+        "market": "crypto",
+        "profit": 72.18236910906666,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 77.7976006846883
+    },
+    {
+        "market": "crypto",
+        "profit": 230.59173274832585,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 242.93440604286147
+    },
+    {
+        "market": "crypto",
+        "profit": 197.49257487473193,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 173.61183682974217
+    },
+    {
+        "market": "crypto",
+        "profit": 145.66561281678818,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 122.94477158411456
+    },
+    {
+        "market": "crypto",
+        "profit": 209.34991011425865,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 167.69653222981455
+    },
+    {
+        "market": "sports",
+        "profit": 122.25942956421184,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 133.30133705242199
+    },
+    {
+        "market": "crypto",
+        "profit": 178.07939662825663,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 186.99258608191153
+    },
+    {
+        "market": "stocks",
+        "profit": 189.00365251440587,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 220.49091302850164
+    },
+    {
+        "market": "crypto",
+        "profit": 117.8890573195423,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 138.4038998550386
+    },
+    {
+        "market": "sports",
+        "profit": 58.3433636965064,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 60.65617772295028
+    },
+    {
+        "market": "sports",
+        "profit": 115.34491235267672,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 135.08976326867145
+    },
+    {
+        "market": "stocks",
+        "profit": 264.35805981526585,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 301.2603873209602
+    },
+    {
+        "market": "crypto",
+        "profit": 158.00944149893354,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 149.53642798665064
+    },
+    {
+        "market": "stocks",
+        "profit": -57.74638667958381,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": -69.06978147939007
+    },
+    {
+        "market": "sports",
+        "profit": 250.79462144097874,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 259.47975700481675
+    },
+    {
+        "market": "sports",
+        "profit": -69.17487507403774,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -59.96876407991206
+    },
+    {
+        "market": "crypto",
+        "profit": 222.4801815238149,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 217.59088278660076
+    },
+    {
+        "market": "sports",
+        "profit": 12.748993253337034,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 14.418865348659299
+    },
+    {
+        "market": "stocks",
+        "profit": 114.42668514295741,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 129.0218708646285
+    },
+    {
+        "market": "stocks",
+        "profit": 65.75439373283407,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 60.732287252346644
+    },
+    {
+        "market": "sports",
+        "profit": -24.4457078311123,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -21.271362452316747
+    },
+    {
+        "market": "sports",
+        "profit": 10.293062499188693,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 10.015296868947118
+    },
+    {
+        "market": "sports",
+        "profit": 2.666927894107957,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 2.218197855108831
+    },
+    {
+        "market": "sports",
+        "profit": 43.23597058568262,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 44.556684802669466
+    },
+    {
+        "market": "crypto",
+        "profit": 145.15533495608702,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 140.22884021238136
+    },
+    {
+        "market": "stocks",
+        "profit": 160.12160028647753,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 161.28167641122172
+    },
+    {
+        "market": "crypto",
+        "profit": 32.78329457453336,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 33.86955314141091
+    },
+    {
+        "market": "sports",
+        "profit": 93.55181048454631,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 100.15497837128419
+    },
+    {
+        "market": "sports",
+        "profit": 214.19151848571425,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 198.71030818459082
+    },
+    {
+        "market": "crypto",
+        "profit": 112.94877590188389,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 112.56620068053738
+    },
+    {
+        "market": "crypto",
+        "profit": -27.83122801391596,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -28.820452346078703
+    },
+    {
+        "market": "crypto",
+        "profit": -88.52776768339257,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": -77.22666893327423
+    },
+    {
+        "market": "sports",
+        "profit": -69.439295210603,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -82.16923106750014
+    },
+    {
+        "market": "crypto",
+        "profit": 0.8619386010356465,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 0.7491963331528185
+    },
+    {
+        "market": "sports",
+        "profit": 68.94118585502787,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 74.32460791752786
+    },
+    {
+        "market": "stocks",
+        "profit": 159.65250239320295,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 159.33175710709043
+    },
+    {
+        "market": "stocks",
+        "profit": 20.148334567539507,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 18.955140283656224
+    },
+    {
+        "market": "sports",
+        "profit": -70.40449391635235,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -73.49892180652034
+    },
+    {
+        "market": "stocks",
+        "profit": -65.3530375064849,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": -72.2176934437013
+    },
+    {
+        "market": "crypto",
+        "profit": 45.44706400778779,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 48.60423792114057
+    },
+    {
+        "market": "sports",
+        "profit": 247.73153842456804,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 205.83179182893824
+    },
+    {
+        "market": "sports",
+        "profit": 119.08890913917821,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 126.09156759247898
+    },
+    {
+        "market": "sports",
+        "profit": 23.025745788509198,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 23.833901737804393
+    },
+    {
+        "market": "sports",
+        "profit": 178.00491752731114,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 173.35090978608682
+    },
+    {
+        "market": "sports",
+        "profit": 13.784488699676217,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 13.94520307133989
+    },
+    {
+        "market": "stocks",
+        "profit": -97.4580810435827,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -110.90589657158385
+    },
+    {
+        "market": "crypto",
+        "profit": 166.7484595797702,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 192.1688215357192
+    },
+    {
+        "market": "stocks",
+        "profit": 272.2260322227528,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 234.01791366671458
+    },
+    {
+        "market": "sports",
+        "profit": 127.66456351225091,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 137.33962829207752
+    },
+    {
+        "market": "crypto",
+        "profit": 74.84638620265542,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 81.7120408110528
+    },
+    {
+        "market": "sports",
+        "profit": 159.21275030269123,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 183.65471497022386
+    },
+    {
+        "market": "stocks",
+        "profit": 90.37491550558707,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 96.11383166026145
+    },
+    {
+        "market": "crypto",
+        "profit": 153.25825948649378,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 164.26525950521446
+    },
+    {
+        "market": "stocks",
+        "profit": 276.90477833651784,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 276.82436114501024
+    },
+    {
+        "market": "crypto",
+        "profit": -11.079166410827895,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -9.720469006354211
+    },
+    {
+        "market": "sports",
+        "profit": -19.877438673077833,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": -20.52908867872648
+    },
+    {
+        "market": "stocks",
+        "profit": 100.26137063037223,
+        "strategy": "momentum",
+        "trade_type": "sell",
+        "expected_return": 108.33342677882867
+    },
+    {
+        "market": "sports",
+        "profit": -33.37920578407379,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": -35.59837478056177
+    },
+    {
+        "market": "stocks",
+        "profit": 85.5770412337964,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 86.92643137908428
+    },
+    {
+        "market": "stocks",
+        "profit": 289.69542247120637,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 310.2439757356099
+    },
+    {
+        "market": "stocks",
+        "profit": 218.0419623784589,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 181.9976882915201
+    },
+    {
+        "market": "crypto",
+        "profit": 59.70805200601802,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": 56.995210289060196
+    },
+    {
+        "market": "stocks",
+        "profit": 235.81056577721046,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 263.9599877719075
+    },
+    {
+        "market": "stocks",
+        "profit": -1.1521676019581832,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": -1.0861223994922493
+    },
+    {
+        "market": "stocks",
+        "profit": 265.45640637411105,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 246.73526938128714
+    },
+    {
+        "market": "sports",
+        "profit": 216.3909483613698,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 190.70686752482823
+    },
+    {
+        "market": "crypto",
+        "profit": 265.5901538083408,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 305.5698767515059
+    },
+    {
+        "market": "crypto",
+        "profit": 205.55600792461644,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 204.33066431648504
+    },
+    {
+        "market": "stocks",
+        "profit": -95.37321763835136,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": -105.43799428475428
+    },
+    {
+        "market": "stocks",
+        "profit": 91.8750898282064,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 85.26327827697632
+    },
+    {
+        "market": "stocks",
+        "profit": -42.437560100627046,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -46.38586150146996
+    },
+    {
+        "market": "sports",
+        "profit": -99.11707764597173,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": -110.75676768459016
+    },
+    {
+        "market": "sports",
+        "profit": 193.27563366601987,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 172.70782142561865
+    },
+    {
+        "market": "sports",
+        "profit": 127.18777061447057,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 132.03238438474796
+    },
+    {
+        "market": "crypto",
+        "profit": 227.21903692213152,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 243.86420969944336
+    },
+    {
+        "market": "stocks",
+        "profit": 237.82489381519122,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 284.0813832937489
+    },
+    {
+        "market": "sports",
+        "profit": 128.55820481679885,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 142.97222841511783
+    },
+    {
+        "market": "crypto",
+        "profit": -32.144899465054166,
+        "strategy": "arbitrage",
+        "trade_type": "buy",
+        "expected_return": -27.794412048582938
+    },
+    {
+        "market": "sports",
+        "profit": -6.365733811691854,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -7.52126897770027
+    },
+    {
+        "market": "sports",
+        "profit": 285.24256807206643,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 255.8118608698484
+    },
+    {
+        "market": "sports",
+        "profit": 255.768469876849,
+        "strategy": "momentum",
+        "trade_type": "bet",
+        "expected_return": 252.8475390277478
+    },
+    {
+        "market": "stocks",
+        "profit": 67.4567824787637,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 70.38569478287725
+    },
+    {
+        "market": "crypto",
+        "profit": 96.38127698348953,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 98.81148745688289
+    },
+    {
+        "market": "sports",
+        "profit": 268.6890769447136,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 314.4934655894421
+    },
+    {
+        "market": "sports",
+        "profit": 154.3534228561401,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": 131.92031643193272
+    },
+    {
+        "market": "crypto",
+        "profit": 119.08510028912653,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 111.33805363501646
+    },
+    {
+        "market": "sports",
+        "profit": -33.3582562447297,
+        "strategy": "ppo_rl",
+        "trade_type": "bet",
+        "expected_return": -34.23653635970752
+    },
+    {
+        "market": "sports",
+        "profit": 215.2569939066649,
+        "strategy": "momentum",
+        "trade_type": "buy",
+        "expected_return": 187.3035997927318
+    },
+    {
+        "market": "crypto",
+        "profit": 174.4788899854904,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 143.93553659146912
+    },
+    {
+        "market": "stocks",
+        "profit": 215.74098517399443,
+        "strategy": "arbitrage",
+        "trade_type": "sell",
+        "expected_return": 194.0865914088271
+    },
+    {
+        "market": "stocks",
+        "profit": 145.20502805280282,
+        "strategy": "arbitrage",
+        "trade_type": "bet",
+        "expected_return": 133.83204438916545
+    },
+    {
+        "market": "crypto",
+        "profit": 106.27753367057628,
+        "strategy": "ppo_rl",
+        "trade_type": "buy",
+        "expected_return": 113.86564595982023
+    },
+    {
+        "market": "stocks",
+        "profit": 160.2756626748693,
+        "strategy": "ppo_rl",
+        "trade_type": "sell",
+        "expected_return": 155.23558299407162
+    }
+]

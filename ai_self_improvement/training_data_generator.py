@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import List, Dict, Optional, Union, Any
 import pandas as pd
 import numpy as np
+np.bool8 = np.bool_
 
 TRAINING_DB = 'training_data.db'
 EXPORT_DIR = 'training_exports'
@@ -25,10 +26,19 @@ class TrainingDataGenerator:
         self.logger = logging.getLogger(__name__)
         try:
             self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            self._migrate_schema()
             self._init_db()
             self.logger.info("Training database initialized.")
         except Exception as e:
             self.logger.error(f"Failed to initialize training DB: {e}")
+
+    def _migrate_schema(self):
+        try:
+            with self.conn:
+                self.conn.execute("ALTER TABLE training_samples RENAME COLUMN data TO sample;")
+                self.logger.info("Migrated column 'data' to 'sample' in training_samples.")
+        except sqlite3.OperationalError:
+            pass  # Column already named 'sample' or migration not needed
 
     def _init_db(self):
         with self.conn:
@@ -37,7 +47,6 @@ class TrainingDataGenerator:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
                     tag TEXT,
-                    data TEXT,
                     source TEXT,
                     tag TEXT,
                     sample TEXT
@@ -102,7 +111,7 @@ class TrainingDataGenerator:
                     # Ensure all numpy data types are converted to native Python types
                     cleaned_sample = json.loads(json.dumps(sample, default=self._json_serializer))
                     self.conn.execute(
-                        "INSERT INTO training_samples (tag, timestamp, data, source, sample) VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO training_samples (tag, timestamp, source, sample) VALUES (?, ?, ?, ?, ?)",
                         (tag, timestamp, json.dumps(cleaned_sample))
                     )
             self.logger.info(f"Stored {len(samples)} samples under tag '{tag}'.")

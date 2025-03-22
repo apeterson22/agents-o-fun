@@ -1,121 +1,64 @@
-import logging
 import os
-from typing import Optional
+import time
+import logging
+import numpy as np
 from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.callbacks import EvalCallback
-import gym
-import torch
-from ai_self_improvement.training_data_generator import TrainingDataGenerator
+from environments.simulated_env import SimulatedTradingEnv
+from utils.stats_tracker import SharedStatsTracker
 
-def setup_logging(log_file: str = 'logs/rl_training.log') -> None:
-    os.makedirs(os.path.dirname(log_file), exist_ok=True)
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.INFO,
-        format='%(asctime)s [%(levelname)s]: %(message)s',
-        filemode='a'
-    )
 
 class RLTrainer:
-    def __init__(self, env_id: str = 'CartPole-v1', n_envs: int = 4) -> None:
-        if not isinstance(n_envs, int) or n_envs <= 0:
-            raise ValueError("n_envs must be a positive integer")
+    def __init__(self, model_path='models/ppo_trading_model.zip'):
+        self.model_path = model_path
+        self.env = DummyVecEnv([lambda: SimulatedTradingEnv()])
+        self.model = PPO("MlpPolicy", self.env, verbose=0)
+        self.stats_tracker = SharedStatsTracker.get_instance()
 
-        self.env_id = env_id
-        self.n_envs = n_envs
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.training_data = TrainingDataGenerator()
+        if os.path.exists(self.model_path):
+            self.model = PPO.load(self.model_path, env=self.env)
+            logging.info("RL model loaded from checkpoint.")
+        else:
+            logging.info("Training new RL model.")
 
-        try:
-            self.env = make_vec_env(env_id, n_envs=n_envs)
-            self.eval_env = gym.make(env_id)
-        except gym.error.Error as e:
-            logging.error(f"Failed to create environment: {e}")
-            raise
+    def train(self, total_timesteps=10000):
+        logging.info(f"Training RL model for {total_timesteps} steps.")
+        self.model.set_env(self.env)
+        episode_rewards = []
 
-    def train_model(self, timesteps: int = 50000, save_path: str = "configs/ppo_trading_model", data_mode: str = "default") -> bool:
-        if not isinstance(timesteps, int) or timesteps <= 0:
-            logging.error("Timesteps must be a positive integer")
-            raise ValueError("Timesteps must be a positive integer")
+        obs = self.env.reset()
+        for step in range(total_timesteps):
+            action, _ = self.model.predict(obs, deterministic=True)
+            obs, reward, done, _, info = self.env.step(action)
 
-        try:
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            portfolio_value = info[0].get("portfolio_value", 0)
+            current_stats = {
+                "step": step,
+                "reward": float(reward[0]),
+                "portfolio_value": float(portfolio_value),
+            }
+            self.stats_tracker.update_stats(current_stats)
 
-            # Generate training samples before model training
-            self.training_data.generate_and_store_all(
-                synthetic_count=200,
-                trade_log_limit=300,
-                mode=data_mode
-            )
+            if done:
+                episode_rewards.append(float(reward[0]))
+                self.stats_tracker.push_episode_summary({
+                    "episode_reward": float(reward[0]),
+                    "step": step,
+                    "portfolio_value": float(portfolio_value)
+                })
+                obs = self.env.reset()
 
-            model = PPO(
-                policy='MlpPolicy',
-                env=self.env,
-                verbose=1,
-                device=self.device,
-                learning_rate=3e-4,
-                n_steps=2048,
-                batch_size=64,
-                n_epochs=10,
-                gamma=0.99,
-                gae_lambda=0.95,
-                clip_range=0.2,
-                ent_coef=0.01,
-            )
+        self.model.save(self.model_path)
+        logging.info(f"RL model trained successfully for {total_timesteps} steps.")
 
-            eval_callback = EvalCallback(
-                self.eval_env,
-                best_model_save_path=save_path + "_best",
-                log_path="logs/",
-                eval_freq=max(10000 // self.n_envs, 1),
-                deterministic=True,
-                render=False
-            )
+    def get_latest_stats(self):
+        return self.stats_tracker.get_stats()
 
-            model.learn(
-                total_timesteps=timesteps,
-                callback=eval_callback,
-                progress_bar=False,
-                tb_log_name="ppo_training"
-            )
+    def get_episode_summaries(self):
+        return self.stats_tracker.get_episode_summaries()
 
-            model.save(save_path)
-            logging.info(f"RL model trained successfully for {timesteps} steps.")
-            return True
-
-        except Exception as e:
-            logging.error(f"Error during RL training: {e}")
-            return False
-
-    def load_model(self, path: str = "configs/ppo_trading_model.zip") -> Optional[PPO]:
-        if not os.path.exists(path):
-            logging.error(f"Model file not found at: {path}")
-            return None
-
-        try:
-            model = PPO.load(path, env=self.env, device=self.device)
-            logging.info("RL model loaded successfully.")
-            return model
-        except Exception as e:
-            logging.error(f"Error loading RL model: {e}")
-            return None
-
-    def __del__(self) -> None:
-        if hasattr(self, 'env'):
-            self.env.close()
-        if hasattr(self, 'eval_env'):
-            self.eval_env.close()
-
-if __name__ == "__main__":
-    setup_logging()
-    try:
-        trainer = RLTrainer(n_envs=4)
-        success = trainer.train_model(timesteps=100000)
-        if success:
-            model = trainer.load_model()
-            if model:
-                logging.info("Training and loading completed successfully")
-    except Exception as e:
-        logging.error(f"Main execution failed: {e}")
-
+    def update_env_data(self, new_data):
+        if hasattr(self.env.envs[0], 'update_data'):
+            self.env.envs[0].update_data(new_data)
+            logging.info("Environment data updated dynamically.")

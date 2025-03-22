@@ -1,226 +1,348 @@
 import dash
-from dash import dcc, html, Output, Input, State
+from dash import dcc, html, Input, Output, State
+import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
-import pandas as pd
+import requests
 import threading
-import time
 import logging
-import os
-from typing import Dict, Any, List, Optional
-from queue import Queue
-import sqlite3
-import asyncio
-from datetime import datetime
-import requests  # For API calls
-import random  # For simulation (remove in production)
-from ai_self_improvement.training_data_generator import get_training_sample_stats, TrainingDataGenerator
+import configparser
 import json
+import os
+import sqlite3
+import pandas as pd
+import subprocess
+import numpy as np
 
-FIDELITY_API_KEY = "your_fidelity_key"
-CRYPTOCOM_API_KEY = "your_cryptocom_key"
-COINBASE_API_KEY = "your_coinbase_key"
+external_stylesheets = [dbc.themes.FLATLY]  # Light mode theme
 
-def setup_logging(log_file: str = 'logs/dashboard.log') -> logging.Logger:
-    os.makedirs(os.path.dirname(log_file), exist_ok=True)
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.INFO,
-        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-        filemode='a'
-    )
-    return logging.getLogger(__name__)
+DB_PATH = os.path.join("databases", "training_data.db")
+CONFIG_DB_PATH = os.path.join("databases", "configurations.db")
+TRADE_DB_PATH = os.path.join("databases", "trades.db")
 
 class MonitoringDashboard:
-    def __init__(self, agent, db_path: str = 'trades.db', update_interval: int = 1000) -> None:
-        self.logger = setup_logging()
+    def __init__(self, agent):
         self.agent = agent
-        self.app = dash.Dash(__name__, update_title=None)
-        self.trade_queue = Queue()
-        self.db_path = db_path
-        self.update_interval = update_interval
-        self.running = False
-        self.training_mode = False
-        self.daily_goal = 10000
+        self.app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
+        self.server = self.app.server
+        self.logger = logging.getLogger("MonitoringDashboard")
+        self._setup_layout()
         self.rl_trainer = None
         self.genetic_optimizer = None
         self.feature_writer = None
-        self._init_db()
+        self._initialize_all_databases()
+        if not self._has_test_data():
+            self._inject_test_data()
 
-        self.app.layout = html.Div([
-            html.H1("AI Trading Dashboard - Agents-o-Fun", style={'textAlign': 'center'}),
-            dcc.Graph(id='profit-graph'),
-            dcc.Graph(id='strategy-performance'),
-            dcc.Graph(id='market-breakdown'),
-            html.Div(id='metrics', children=[
-                html.H3("Key Metrics"),
-                html.P(id='daily-profit'),
-                html.P(id='goal-progress'),
-                html.P(id='success-rate'),
-                html.P(id='active-strategies'),
-                html.P(id='api-status'),
-                html.P(id="current-mode", children="Mode: Trading")
-            ]),
-            html.Button("Toggle Training Mode", id="toggle-train-btn", n_clicks=0),
-            html.Button("Retry Health Check", id="retry-health-btn", n_clicks=0),
-            html.Div(id="training-status"),
-            html.Div(id="health-status"),
-            dcc.Dropdown(
-                id="training-mode-select",
-                options=[
-                    {"label": "Default", "value": "default"},
-                    {"label": "Anomaly Injection", "value": "anomaly"},
-                    {"label": "Market Bias", "value": "market_bias"}
-                ],
-                value="default",
-                placeholder="Select Training Mode"
-            ),
-            html.Button("Generate Custom Training Set", id="custom-generate-btn"),
+    def _initialize_all_databases(self):
+        self._initialize_db(CONFIG_DB_PATH, [
+            "CREATE TABLE IF NOT EXISTS configurations (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, key TEXT NOT NULL, value TEXT NOT NULL)",
+            "CREATE TABLE IF NOT EXISTS config_history (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, config TEXT)",
+            "CREATE TABLE IF NOT EXISTS schema_version (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER)"
+        ], current_version=1)
 
-            html.H4("🧠 Training Sample Manager"),
-            dcc.Dropdown(id="sample-tag-dropdown", options=[], placeholder="Choose a tag"),
-            html.Button("Refresh Samples", id="refresh-samples-btn", n_clicks=0),
-            html.Div(id="sample-preview-panel", style={"whiteSpace": "pre-wrap", "border": "1px solid #ccc", "padding": "1rem", "borderRadius": "10px"}),
+        self._initialize_db(DB_PATH, [
+            "CREATE TABLE IF NOT EXISTS training_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, step INTEGER, reward REAL, loss REAL)",
+            "CREATE TABLE IF NOT EXISTS training_samples (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, model_name TEXT, strategy TEXT, tag TEXT)",
+            "CREATE TABLE IF NOT EXISTS schema_version (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER)"
+        ], current_version=2)
 
-            html.Div([
-                html.H4("Training Data Overview"),
-                html.Div(id='training-data-stats'),
-                html.Button("Generate New Training Set", id="generate-training-btn", n_clicks=0),
-                dcc.Interval(id="training-data-refresh", interval=60*1000, n_intervals=0)
-            ]),
-            dcc.Interval(id='interval-component', interval=update_interval, n_intervals=0),
-            dcc.Store(id="mode-store"),
-            dcc.Store(id='trade-data-store')
-        ])
+        self._initialize_db(TRADE_DB_PATH, [
+            "CREATE TABLE IF NOT EXISTS trades (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, symbol TEXT, price REAL, volume INTEGER, result TEXT)",
+            "CREATE TABLE IF NOT EXISTS schema_version (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER)"
+        ], current_version=1)
 
-        self._register_callbacks()
-
-    def _init_db(self) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS trades (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT,
-                    market TEXT,
-                    profit REAL,
-                    strategy TEXT,
-                    trade_type TEXT,
-                    source TEXT
-                )
-            ''')
-        self.logger.info("Database initialized successfully")
-
-    def _register_callbacks(self) -> None:
-        @self.app.callback(
-            [Output("training-status", "children"),
-             Output("current-mode", "children"),
-             Output("mode-store", "data"),
-             Output("training-data-stats", "children")],
-            [Input("toggle-train-btn", "n_clicks"),
-             Input("training-data-refresh", "n_intervals"),
-             Input("generate-training-btn", "n_clicks")],
-            [State("mode-store", "data")],
-            prevent_initial_call=True
-        )
-        def toggle_training(n_clicks, mode_state):
-            if mode_state is None:
-                mode_state = {"training_mode": False}
-            mode_state["training_mode"] = not mode_state["training_mode"]
-            self.training_mode = mode_state["training_mode"]
-
-            mode_text = "Training" if self.training_mode else "Trading"
-            self.logger.info(f"Training Mode toggled: {mode_text}")
-
-            if self.training_mode:
-                self.logger.info("Starting Training Mode...")
-                threading.Thread(target=self.agent.train_only_mode, daemon=True).start()
-
-            stats = get_training_sample_stats()
-            return f"Training Mode: {mode_text}", f"Mode: {mode_text}", mode_state, html.Ul([
-                html.Li(f"Total Samples: {stats['total_samples']}"),
-                html.Li("By Tag:"),
-                html.Ul([html.Li(f"{tag}: {count}") for tag, count in stats["tags"].items()])
-            ])
-
-        @self.app.callback(
-            Output("sample-tag-dropdown", "options"),
-            Input("refresh-samples-btn", "n_clicks"),
-            prevent_initial_call=True
-        )
-        def update_tag_dropdown(_):
-            try:
-                tags = self.agent.training_data_generator.get_available_tags()
-                return [{"label": tag, "value": tag} for tag in tags]
-            except Exception as e:
-                return []
-
-        @self.app.callback(
-            Output("sample-preview-panel", "children"),
-            Input("refresh-samples-btn", "n_clicks"),
-            State("sample-tag-dropdown", "value")
-        )
-        def display_sample_preview(n_clicks, selected_tag):
-            if not selected_tag:
-                return "No tag selected."
-
-            samples = self.agent.training_data_generator.get_samples_by_tag(selected_tag)
-            preview = samples[:5]
-            return f"Total Samples: {len(samples)}\nPreview:\n{json.dumps(preview, indent=2)}"
-
-    def start(self) -> None:
-        if not self.running:
-            self.running = True
-            threading.Thread(target=self.run_dashboard, daemon=True).start()
-            self.logger.info("Dashboard thread started")
-
-    def run_dashboard(self) -> None:
+    def _initialize_db(self, db_path, schema_statements, current_version=1):
         try:
-            self.logger.info("Starting monitoring dashboard on http://0.0.0.0:8050")
-            self.app.run_server(debug=False, host='0.0.0.0', port=8050, threaded=True)
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS schema_version (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER)")
+            cursor.execute("SELECT version FROM schema_version WHERE id = 1")
+            row = cursor.fetchone()
+            if row is None:
+                for stmt in schema_statements:
+                    try:
+                        cursor.execute(stmt)
+                    except sqlite3.OperationalError as se:
+                        if "duplicate column name" in str(se):
+                            self.logger.warning(f"Column already exists, skipping statement: {stmt}")
+                        else:
+                            raise
+                cursor.execute("INSERT OR REPLACE INTO schema_version (id, version) VALUES (1, ?)", (current_version,))
+                conn.commit()
+                self.logger.info(f"Initialized {db_path} at schema version {current_version}")
+            elif row[0] < current_version:
+                self.logger.info(f"Database at {db_path} needs migration from v{row[0]} to v{current_version}")
+                self._apply_migrations(cursor, row[0], current_version, db_path)
+                conn.commit()
+            if db_path == DB_PATH:
+                cursor.execute("PRAGMA table_info(training_samples)")
+                cols = [r[1] for r in cursor.fetchall()]
+                for col in ["model_name", "strategy", "tag"]:
+                    if col not in cols:
+                        cursor.execute(f"ALTER TABLE training_samples ADD COLUMN {col} TEXT")
+                conn.commit()
+            conn.close()
         except Exception as e:
-            self.logger.error(f"Dashboard server failed: {e}")
-        finally:
-            self.running = False
+            self.logger.error(f"Failed to initialize DB schema at {db_path}: {e}")
 
-    def integrate_components(self, rl_trainer, genetic_optimizer, feature_writer) -> None:
+    def _apply_migrations(self, cursor, current_version, target_version, db_path):
+        if db_path == DB_PATH and current_version < 2:
+            try:
+                existing_cols = [row[1] for row in cursor.execute("PRAGMA table_info(training_samples)")]
+                if "model_name" not in existing_cols:
+                    cursor.execute("ALTER TABLE training_samples ADD COLUMN model_name TEXT")
+                if "strategy" not in existing_cols:
+                    cursor.execute("ALTER TABLE training_samples ADD COLUMN strategy TEXT")
+                if "tag" not in existing_cols:
+                    cursor.execute("ALTER TABLE training_samples ADD COLUMN tag TEXT")
+                cursor.execute("UPDATE schema_version SET version = 2 WHERE id = 1")
+                self.logger.info("Migrated training_data.db to schema version 2")
+            except sqlite3.OperationalError as e:
+                self.logger.warning(f"Migration skipped due to error: {e}")
+
+    def _has_test_data(self):
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM training_samples")
+                sample_count = cursor.fetchone()[0]
+            with sqlite3.connect(TRADE_DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM trades")
+                trade_count = cursor.fetchone()[0]
+            return sample_count > 0 and trade_count > 0
+        except:
+            return False
+
+    def _inject_test_data(self):
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO training_samples (model_name, strategy, tag) VALUES (?, ?, ?)",
+                               ("deepseek-r1:8b", "mean-reversion", "test-sample"))
+                conn.commit()
+
+            with sqlite3.connect(TRADE_DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO trades (symbol, price, volume, result) VALUES (?, ?, ?, ?)",
+                               ("AAPL", 186.12, 25, "win"))
+                conn.commit()
+
+            self.logger.info("Test data injected into training_samples and trades.")
+        except Exception as e:
+            self.logger.warning(f"Test data injection failed: {e}")
+
+    def _get_model_options(self):
+        try:
+            output = subprocess.check_output(["ollama", "list"]).decode("utf-8")
+            models = []
+            for line in output.strip().split("\n")[1:]:
+                parts = line.split()
+                if parts:
+                    models.append({"label": parts[0], "value": parts[0]})
+            if not any(m['value'].lower().startswith("deepseek") for m in models):
+                models.append({"label": "deepseek-r1:8b (fallback)", "value": "deepseek-r1:8b"})
+            return models
+        except Exception as e:
+            self.logger.error(f"Error fetching available models: {e}")
+            return [{"label": "deepseek-r1:8b (fallback)", "value": "deepseek-r1:8b"}]
+
+    def integrate_components(self, rl_trainer, genetic_optimizer, feature_writer):
         self.rl_trainer = rl_trainer
         self.genetic_optimizer = genetic_optimizer
         self.feature_writer = feature_writer
-        self.logger.info("Components integrated: RLTrainer, GeneticOptimizer, AdvancedFeatureWriter")
+        self._ensure_trainer_methods()
 
-    def load_latest_data(self) -> pd.DataFrame:
+    def _ensure_trainer_methods(self):
+        if not hasattr(self.rl_trainer, 'reload_model'):
+            def dummy_reload():
+                self.logger.warning("reload_model() not implemented, stub called.")
+            self.rl_trainer.reload_model = dummy_reload
+
+        if not hasattr(self.rl_trainer, 'save_checkpoint'):
+            def dummy_checkpoint():
+                self.logger.warning("save_checkpoint() not implemented, stub called.")
+            self.rl_trainer.save_checkpoint = dummy_checkpoint
+
+    def _get_current_model(self):
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                df = pd.read_sql_query("SELECT * FROM trades ORDER BY timestamp DESC LIMIT 1000", conn)
-            if df.empty:
-                return pd.DataFrame(columns=['timestamp', 'market', 'profit', 'strategy', 'trade_type', 'source'])
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            return df
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            return config.get('AI', 'model', fallback='deepseek-r1:8b')
         except Exception as e:
-            self.logger.error(f"Failed to load trade data: {e}")
-            return pd.DataFrame(columns=['timestamp', 'market', 'profit', 'strategy', 'trade_type', 'source'])
+            self.logger.error(f"Error getting current model from config: {e}")
+            return 'deepseek-r1:8b'
 
-    def _check_api_status(self) -> str:
-        status = []
-        for api, key in [('Fidelity', FIDELITY_API_KEY), 
-                         ('Crypto.com', CRYPTOCOM_API_KEY), 
-                         ('Coinbase', COINBASE_API_KEY)]:
-            status.append(f"{api}: OK" if random.choice([True, False]) else f"{api}: Down")
-        return " | ".join(status)
+    def _store_model_config(self, model_name):
+        try:
+            conn = sqlite3.connect(CONFIG_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO configurations (key, value) VALUES (?, ?)", ("model", model_name))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            self.logger.error(f"Failed to store model config to DB: {e}")
 
-    def stop(self) -> None:
-        self.running = False
-        self.logger.info("Dashboard stopped")
+    def _fetch_config_history(self):
+        try:
+            conn = sqlite3.connect(CONFIG_DB_PATH)
+            df = pd.read_sql_query("SELECT timestamp, key, value FROM configurations ORDER BY timestamp DESC", conn)
+            conn.close()
+            return html.Div([
+                html.H5("Configuration Change History"),
+                dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True, className="mt-2")
+            ])
+        except Exception as e:
+            self.logger.error(f"Error fetching config history: {e}")
+            return html.Div("Failed to load config history.")
 
-if __name__ == "__main__":
-    from rl_trainer import RLTrainer
-    from genetic_optimizer import GeneticOptimizer
-    from feature_writer import AdvancedFeatureWriter
+    def _setup_layout(self):
+        self.app.layout = dbc.Container([
+            html.H1("AI Trading Agent Dashboard", className="text-center my-4 text-dark"),
+            dcc.Tabs(id="tabs", value="overview", children=[
+                dcc.Tab(label="Overview", value="overview", children=self._overview_tab()),
+                dcc.Tab(label="Admin", value="admin", children=self._admin_tab()),
+                dcc.Tab(label="Settings", value="settings", children=self._settings_tab())
+            ]),
+            dcc.Interval(id='interval-component', interval=5*1000, n_intervals=0),
+        ], fluid=True)
 
-    dashboard = MonitoringDashboard(agent=None)
-    rl_trainer = RLTrainer()
-    genetic_optimizer = GeneticOptimizer()
-    feature_writer = AdvancedFeatureWriter()
+    def _overview_tab(self):
+        return html.Div([
+            dbc.Row([
+                dbc.Col(dbc.Card([html.H4("Reward", id="reward", className="card-title text-center text-dark")]), width=3),
+                dbc.Col(dbc.Card([html.H4("Loss", id="loss", className="card-title text-center text-dark")]), width=3),
+                dbc.Col(dbc.Button("Start Training", id="start-training-btn", color="success", className="w-100"), width=2),
+                dbc.Col(dbc.Button("Reload Model", id="reload-model-btn", color="info", className="w-100"), width=2),
+                dbc.Col(dbc.Button("Save Checkpoint", id="checkpoint-btn", color="warning", className="w-100"), width=2),
+            ], className="mb-4"),
+            dbc.Row([
+                dbc.Col(dcc.Graph(id="reward-graph"), width=6),
+                dbc.Col(dcc.Graph(id="loss-graph"), width=6),
+            ])
+        ])
 
-    dashboard.integrate_components(rl_trainer, genetic_optimizer, feature_writer)
-    dashboard.start()
+    def _admin_tab(self):
+        return html.Div([
+            html.H4("Admin Panel", className="text-dark"),
+            dbc.Button("Initialize Modules", id="init-modules-btn", color="primary", className="my-2"),
+            html.Div(id="config-history", className="mt-3"),
+        ])
+
+    def _settings_tab(self):
+        return html.Div([
+            html.H4("Settings", className="text-dark"),
+            html.Label("Select Model:", className="text-dark"),
+            dcc.Dropdown(
+                id='model-selector',
+                options=self._get_model_options(),
+                value=self._get_current_model(),
+                clearable=False
+            ),
+            dbc.Button("Switch Model", id="switch-model-btn", color="secondary", className="my-2"),
+        ])
+
+    def start(self):
+        self._register_callbacks()
+        self.app.run(debug=False, host="0.0.0.0", port=8050, use_reloader=False)
+
+    def _register_callbacks(self):
+        @self.app.callback(
+            Output('reward', 'children'),
+            Output('loss', 'children'),
+            Output('reward-graph', 'figure'),
+            Output('loss-graph', 'figure'),
+            Input('interval-component', 'n_intervals')
+        )
+        def update_dashboard(n):
+            try:
+                summary_resp = requests.get("http://127.0.0.1:8081/stats")
+                raw_stats_resp = requests.get("http://127.0.0.1:8081/stats/raw")
+                summary = summary_resp.json()
+                raw_stats = raw_stats_resp.json()
+
+                if isinstance(summary, list):
+                    summary = summary[0] if summary else {}
+                if not isinstance(raw_stats, list):
+                    raw_stats = []
+
+                reward_val = summary.get("reward", "N/A")
+                loss_val = summary.get("loss", "N/A")
+
+                reward_trace = go.Scatter(
+                    x=[s.get("step", 0) for s in raw_stats if isinstance(s, dict)],
+                    y=[s.get("reward", 0) for s in raw_stats if isinstance(s, dict)],
+                    mode='lines+markers', name='Reward')
+                loss_trace = go.Scatter(
+                    x=[s.get("step", 0) for s in raw_stats if isinstance(s, dict)],
+                    y=[s.get("loss", 0) for s in raw_stats if isinstance(s, dict)],
+                    mode='lines+markers', name='Loss')
+                reward_fig = go.Figure(data=[reward_trace])
+                reward_fig.update_layout(title="Reward over Time", xaxis_title="Step", yaxis_title="Reward")
+                loss_fig = go.Figure(data=[loss_trace])
+                loss_fig.update_layout(title="Loss over Time", xaxis_title="Step", yaxis_title="Loss")
+
+                return f"Reward: {reward_val}", f"Loss: {loss_val}", reward_fig, loss_fig
+            except Exception as e:
+                self.logger.error(f"Dashboard update error: {e}")
+                return "Reward: N/A", "Loss: N/A", go.Figure(), go.Figure()
+
+        @self.app.callback(Output('start-training-btn', 'n_clicks'), Input('start-training-btn', 'n_clicks'))
+        def trigger_training(n):
+            if n:
+                threading.Thread(target=self.agent._train_only_sync, daemon=True).start()
+            return 0
+
+        @self.app.callback(Output('reload-model-btn', 'n_clicks'), Input('reload-model-btn', 'n_clicks'))
+        def reload_model(n):
+            if n:
+                try:
+                    if hasattr(self.agent.rl_trainer, 'reload_model'):
+                        self.agent.rl_trainer.reload_model()
+                except Exception as e:
+                    self.logger.error(f"Reload model failed: {e}")
+            return 0
+
+        @self.app.callback(Output('checkpoint-btn', 'n_clicks'), Input('checkpoint-btn', 'n_clicks'))
+        def save_checkpoint(n):
+            if n:
+                try:
+                    if hasattr(self.agent.rl_trainer, 'save_checkpoint'):
+                        self.agent.rl_trainer.save_checkpoint()
+                except Exception as e:
+                    self.logger.error(f"Checkpoint save failed: {e}")
+            return 0
+
+        @self.app.callback(Output('init-modules-btn', 'n_clicks'), Input('init-modules-btn', 'n_clicks'), prevent_initial_call=True)
+        def init_modules(n):
+            if n:
+                try:
+                    self.agent.initialize_modules()
+                except Exception as e:
+                    self.logger.error(f"Admin action failed: {e}")
+            return 0
+
+        @self.app.callback(
+            Output('switch-model-btn', 'n_clicks'),
+            Input('switch-model-btn', 'n_clicks'),
+            State('model-selector', 'value'),
+            prevent_initial_call=True
+        )
+        def switch_model(n, selected_model):
+            if n and selected_model:
+                try:
+                    self.agent.config.set('AI', 'model', selected_model)
+                    with open('config.ini', 'w') as configfile:
+                        self.agent.config.write(configfile)
+                    self.agent._init_ai_client()
+                    self._store_model_config(selected_model)
+                except Exception as e:
+                    self.logger.error(f"Model switch failed: {e}")
+            return 0
+
+        @self.app.callback(Output('config-history', 'children'), Input('tabs', 'value'))
+        def update_config_history(tab_value):
+            if tab_value == 'admin':
+                return self._fetch_config_history()
+            return dash.no_update
 

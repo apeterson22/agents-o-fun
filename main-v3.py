@@ -103,7 +103,7 @@ class TradingAgent:
                 from ollama import Client
                 self.ai_client = Client(host=self.ai_endpoint)
                 model_list = self.ai_client.list().get("models", [])
-                available_models = [m.get("name") for m in model_list if m.get("name")]
+                available_models = [m["name"] for m in model_list]
 
                 if available_models:
                     self.config.set('AI', 'available_models', ",".join(available_models))
@@ -122,7 +122,7 @@ class TradingAgent:
                 )
                 if response.status_code == 200:
                     models = response.json().get("data", [])
-                    available_models = [m.get("id") for m in models if m.get("id")]
+                    available_models = [m["id"] for m in models]
                     if available_models:
                         self.config.set('AI', 'available_models', ",".join(available_models))
                         with open('config.ini', 'w') as configfile:
