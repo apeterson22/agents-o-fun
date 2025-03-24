@@ -42,7 +42,7 @@ class SimulatedTradingEnv(Env):
         obs = self.data[start:end]
         if obs.shape[0] < self.window_size:
             obs = np.pad(obs, ((0, self.window_size - obs.shape[0]), (0, 0)), mode='constant')
-        return np.expand_dims(obs.astype(np.float32), axis=0)  # Ensure shape is (1, window, features)
+        return obs.astype(np.float32)
 
     def step(self, action):
         price = self.data[self.current_step + self.window_size - 1][0]
@@ -74,3 +74,4 @@ class SimulatedTradingEnv(Env):
 
     def render(self, mode='human'):
         print(f"Step: {self.current_step}, Cash: {self.cash}, Holdings: {self.holdings}, Portfolio Value: {self.portfolio_value}")
+

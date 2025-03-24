@@ -27,29 +27,42 @@ class RLTrainer:
         self.model.set_env(self.env)
         episode_rewards = []
 
-        obs, _ = self.env.reset()
+        obs = self.env.reset()
         for step in range(total_timesteps):
-            action, _ = self.model.predict(obs, deterministic=True)
-            obs, reward, done, _, info = self.env.step(action)
+            try:
+                action, _ = self.model.predict(obs, deterministic=True)
 
-            reward = float(np.squeeze(reward))  # Ensure scalar
-            portfolio_value = info.get("portfolio_value", 0)
+                # Ensure action is in the correct shape if needed
+                if isinstance(action, np.ndarray) and action.ndim == 1:
+                    action = action.reshape(-1, 1)
 
-            current_stats = {
-                "step": step,
-                "reward": reward,
-                "portfolio_value": float(portfolio_value),
-            }
-            self.stats_tracker.update_stats(current_stats)
+                obs, reward, done, _, info = self.env.step(action)
 
-            if done:
-                episode_rewards.append(reward)
-                self.stats_tracker.push_episode_summary({
-                    "episode_reward": reward,
+                # Debug shape logs (only the first few steps for cleanliness)
+                if step < 5:
+                    logging.debug(f"Step {step} Shapes: obs={obs.shape}, reward={reward.shape}, done={done}, info={info}")
+
+                portfolio_value = info[0].get("portfolio_value", 0)
+                current_stats = {
                     "step": step,
-                    "portfolio_value": float(portfolio_value)
-                })
-                obs, _ = self.env.reset()
+                    "reward": float(np.squeeze(reward)),
+                    "portfolio_value": float(portfolio_value),
+                }
+                self.stats_tracker.update_stats(current_stats)
+
+                if done:
+                    reward_val = float(np.squeeze(reward))
+                    episode_rewards.append(reward_val)
+                    self.stats_tracker.push_episode_summary({
+                        "episode_reward": reward_val,
+                        "step": step,
+                        "portfolio_value": float(portfolio_value)
+                    })
+                    obs = self.env.reset()
+
+            except Exception as e:
+                logging.error(f"Training step failed at step {step} with error: {e}")
+                break
 
         self.model.save(self.model_path)
         logging.info(f"RL model trained successfully for {total_timesteps} steps.")
@@ -64,4 +77,3 @@ class RLTrainer:
         if hasattr(self.env.envs[0], 'update_data'):
             self.env.envs[0].update_data(new_data)
             logging.info("Environment data updated dynamically.")
-

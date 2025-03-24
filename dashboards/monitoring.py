@@ -12,6 +12,8 @@ import sqlite3
 import pandas as pd
 import subprocess
 import numpy as np
+from utils.sample_data_injector import run_data_injection
+from ai_self_improvement.reinforcement_learning import RLTrainer
 
 external_stylesheets = [dbc.themes.FLATLY]  # Light mode theme
 
@@ -26,12 +28,80 @@ class MonitoringDashboard:
         self.server = self.app.server
         self.logger = logging.getLogger("MonitoringDashboard")
         self._setup_layout()
-        self.rl_trainer = None
+        self.rl_trainer = RLTrainer()
         self.genetic_optimizer = None
         self.feature_writer = None
         self._initialize_all_databases()
         if not self._has_test_data():
             self._inject_test_data()
+        self._register_callbacks()
+
+    def _setup_layout(self):
+        self.app.layout = html.Div([
+            dcc.Tabs(id="tabs", value="overview", children=[
+                dcc.Tab(label="Overview", value="overview"),
+                dcc.Tab(label="Training", value="training"),
+                dcc.Tab(label="Admin", value="admin")
+            ]),
+            html.Div(id="tab-content"),
+            dcc.Store(id="trigger-refresh")
+        ])
+
+    def _register_callbacks(self):
+        @self.app.callback(
+            Output("tab-content", "children"),
+            [Input("tabs", "value"), Input("trigger-refresh", "data")]
+        )
+        def render_content(tabi, _):
+            if tab == "admin":
+                return html.Div([
+                    html.H4("Admin Tools"),
+                    html.Button("Inject Sample Data", id="inject-data-btn", n_clicks=0, className="btn btn-warning"),
+                    html.Div(id="inject-data-status")
+                ])
+            elif tab == "overview":
+                return html.Div([
+                    html.H4("System Overview"),
+                    dcc.Graph(
+                        id="overview-graph",
+                        figure=go.Figure(
+                            data=[go.Scatter(x=[], y=[], mode='lines+markers')],
+                            layout=go.Layout(title="Overview Graph Placeholder")
+                        )
+                    )
+                ])
+            elif tab == "training":
+                return html.Div([
+                    html.H4("Training Metrics"),
+                    dcc.Graph(
+                        id="training-graph",
+                        figure=go.Figure(
+                            data=[go.Bar(x=[], y=[])],
+                            layout=go.Layout(title="Training Graph Placeholder")
+                        )
+                    )
+                ])
+            return html.Div([html.P(f"Content for {tab} tab")])
+
+        @self.app.callback(
+            Output("inject-data-status", "children"),
+            Output("trigger-refresh", "data"),
+            Input("inject-data-btn", "n_clicks"),
+            prevent_initial_call=True
+        )
+        def inject_data_callback(n_clicks):
+            def run_background_injection():
+                try:
+                    run_data_injection()
+                    logging.info("Background data injection complete.")
+                    self.rl_trainer.train(total_timesteps=10000)
+                    logging.info("Triggered training after data injection.")
+                except Exception as e:
+                    logging.error(f"Injection or training failed: {str(e)}")
+
+            thread = threading.Thread(target=run_background_injection)
+            thread.start()
+            return "Data injection and training triggered in background."
 
     def _initialize_all_databases(self):
         self._initialize_db(CONFIG_DB_PATH, [
@@ -79,7 +149,10 @@ class MonitoringDashboard:
                 cols = [r[1] for r in cursor.fetchall()]
                 for col in ["model_name", "strategy", "tag"]:
                     if col not in cols:
-                        cursor.execute(f"ALTER TABLE training_samples ADD COLUMN {col} TEXT")
+                        try:
+                            cursor.execute(f"ALTER TABLE training_samples ADD COLUMN {col} TEXT")
+                        except sqlite3.OperationalError as e:
+                            self.logger.warning(f"Skipping column addition due to: {e}")
                 conn.commit()
             conn.close()
         except Exception as e:
@@ -146,6 +219,11 @@ class MonitoringDashboard:
         except Exception as e:
             self.logger.error(f"Error fetching available models: {e}")
             return [{"label": "deepseek-r1:8b (fallback)", "value": "deepseek-r1:8b"}]
+
+    def _normalize_reward(self, reward):
+        if isinstance(reward, np.ndarray):
+            return float(reward.squeeze())
+        return float(reward)
 
     def integrate_components(self, rl_trainer, genetic_optimizer, feature_writer):
         self.rl_trainer = rl_trainer

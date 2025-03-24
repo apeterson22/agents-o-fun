@@ -25,6 +25,8 @@ from core.trading_engine import TradingEngine
 from core.risk_manager import RiskManager
 from core.regulatory_compliance import RegulatoryCompliance
 from dotenv import load_dotenv
+from utils.db_init import init_databases
+init_databases()
 
 sys.setrecursionlimit(10000)
 
