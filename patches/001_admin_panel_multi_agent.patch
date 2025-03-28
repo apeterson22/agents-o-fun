@@ -1,0 +1,116 @@
+--- a/dashboards/components/admin.py
++++ b/dashboards/components/admin.py
+@@ -1,13 +1,85 @@
+-import dash_html_components as html
+-import dash_core_components as dcc
+-from dash import Input, Output, State, callback_context
++from dash import html, dcc, Input, Output, State, ctx
+ import logging
++from core.agent_registry import get_registered_agents, control_agent
++
+ TAB_ID = "admin"
+ TAB_LABEL = "Admin"
+ 
+ def render_layout():
+-    return html.Div([
+-        html.H2("Admin Controls"),
+-        html.Div([
+-            html.Button("Restart Trading Agent", id="btn-restart-agent", n_clicks=0),
+-            html.Button("Restart Trainer", id="btn-restart-trainer", n_clicks=0),
+-            html.Button("Inject Training Data", id="btn-inject-data", n_clicks=0),
+-        ]),
+-        html.Br(),
+-        html.Div(id="admin-action-result")
+-    ])
++    agents = get_registered_agents()
++    layout_children = [html.H2("Admin Panel: Multi-Agent Control")]
++
++    if len(agents) > 6:
++        layout_children += [
++            html.Div([
++                html.Label("Select Agent"),
++                dcc.Dropdown(
++                    id="agent-selector",
++                    options=[{"label": name, "value": name} for name in agents],
++                    value=list(agents.keys())[0]
++                ),
++                html.Div(id="selected-agent-status"),
++                html.Div([
++                    html.Button("Start", id="btn-start", n_clicks=0),
++                    html.Button("Stop", id="btn-stop", n_clicks=0),
++                    html.Button("Restart", id="btn-restart", n_clicks=0)
++                ])
++            ])
++        ]
++    else:
++        for agent in agents:
++            layout_children += [
++                html.H4(f"{agent} (Status: {agents[agent]['status']})"),
++                html.Div([
++                    html.Button(f"Start {agent}", id=f"btn-start-{agent}", n_clicks=0),
++                    html.Button(f"Stop {agent}", id=f"btn-stop-{agent}", n_clicks=0),
++                    html.Button(f"Restart {agent}", id=f"btn-restart-{agent}", n_clicks=0),
++                ]),
++                html.Hr()
++            ]
++
++    layout_children.append(html.Div(id="admin-action-result"))
++    return html.Div(layout_children)
++
+ def register_callbacks(app):
+-    @app.callback(
+-        Output("admin-action-result", "children"),
+-        Input("btn-restart-agent", "n_clicks"),
+-        Input("btn-restart-trainer", "n_clicks"),
+-        Input("btn-inject-data", "n_clicks"),
+-        prevent_initial_call=True
+-    )
+-    def handle_admin_actions(n_agent, n_trainer, n_data):
+-        ctx = callback_context
+-        if not ctx.triggered:
+-            return "No action triggered."
+-
+-        button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+-        logging.info(f"[Admin Action] Triggered: {button_id}")
+-
+-        if button_id == "btn-restart-agent":
+-            return "✅ Trading Agent restarted."
+-        elif button_id == "btn-restart-trainer":
+-            return "✅ Trainer process restarted."
+-        elif button_id == "btn-inject-data":
+-            from utils.sample_data_injector import run_data_injection
+-            run_data_injection()
+-            return "✅ Training data injected successfully."
+-
+-        return "Unknown action."
++    import re
++    inputs = [Input("btn-start", "n_clicks"),
++              Input("btn-stop", "n_clicks"),
++              Input("btn-restart", "n_clicks"),
++              Input("agent-selector", "value")]
++    for agent in get_registered_agents():
++        inputs.extend([
++            Input(f"btn-start-{agent}", "n_clicks"),
++            Input(f"btn-stop-{agent}", "n_clicks"),
++            Input(f"btn-restart-{agent}", "n_clicks")
++        ])
++
++    @app.callback(Output("admin-action-result", "children"), inputs, prevent_initial_call=True)
++    def handle_agent_actions(*args):
++        triggered = ctx.triggered_id
++        if not triggered:
++            return "No action triggered."
++
++        agents = get_registered_agents()
++        if triggered == "btn-start" or triggered == "btn-stop" or triggered == "btn-restart":
++            selected = args[3]
++            action = triggered.split("-")[1]
++            control_agent(selected, action)
++            return f"✅ {selected} {action}ed."
++        else:
++            match = re.match(r"btn-(start|stop|restart)-(.+)", triggered)
++            if match:
++                action, agent = match.groups()
++                control_agent(agent, action)
++                return f"✅ {agent} {action}ed."
++        return "Unknown action triggered."

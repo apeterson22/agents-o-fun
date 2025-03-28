@@ -1,0 +1,35 @@
+{
+  "agents": [
+    {
+      "name": "trading",
+      "description": "Main trading agent for equities and ETFs",
+      "model_type": "RL",
+      "data_source": "fidelity, simulated_env"
+    },
+    {
+      "name": "crypto",
+      "description": "Cryptocurrency trading agent",
+      "model_type": "RL",
+      "data_source": "coinbase, cryptocom"
+    },
+    {
+      "name": "betting",
+      "description": "Agent handling sports betting strategies",
+      "model_type": "Rule-based",
+      "data_source": "odds_api"
+    },
+    {
+      "name": "ml-predictor",
+      "description": "Supervised ML model for trend prediction",
+      "model_type": "ML",
+      "data_source": "market_data"
+    },
+    {
+      "name": "marketing-guru",
+      "description": "AI agent for running marketing analysis and strategy",
+      "model_type": "LLM",
+      "data_source": "social_media, trend_data"
+    }
+  ]
+}
+

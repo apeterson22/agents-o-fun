@@ -1,16 +1,16 @@
 # utils/sample_data_injector.py
-
 import sqlite3
 import os
 import logging
 import random
 from datetime import datetime, timedelta
+from configs import paths
 
-DB_PATH = os.path.join("databases", "training_data.db")
+#DB_PATH = os.path.join("databases", "training_data.db")
 
 def run_data_injection(num_records=300):
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(paths.TRAINING_DATA_DB)
         c = conn.cursor()
 
         # Ensure the table has the correct columns
