@@ -1,44 +1,27 @@
-import json
 import logging
-from core.agent_registry import register_agent, AGENT_REGISTRY, AGENT_STATUS
+import yaml
+from core.agent_factory import agent_factory
+from core.agent_registry import register_agent
 
-# Optional: You can extend this registry to include metadata
-AGENT_METADATA = {}
-
-CONFIG_PATH = "configs/agents_config.json"
-
-def load_agents_from_config():
+def load_agents_from_config(config_path="configs/agent_config.yaml"):
     try:
-        with open(CONFIG_PATH, "r") as f:
-            config = json.load(f)
-            agents = config.get("agents", [])
-
-            for agent in agents:
-                name = agent.get("name")
-                description = agent.get("description", "")
-                model_type = agent.get("model_type", "unknown")
-                data_source = agent.get("data_source", "")
-
-                # Store metadata
-                AGENT_METADATA[name] = {
-                    "description": description,
-                    "model_type": model_type,
-                    "data_source": data_source,
-                    "status": "stopped"
-                }
-
-                # Dynamically create a stub class and register it
-                @register_agent(name)
-                class GenericAgent:
-                    def run(self):
-                        logging.info(f"[{name.upper()} AGENT] Running agent: {description}")
-                        logging.info(f"  • Model: {model_type}")
-                        logging.info(f"  • Data Source: {data_source}")
-                        # Simulate agent behavior
-                        print(f"[{name}] Agent started and running...")
-
-                logging.info(f"[AgentLoader] Registered agent '{name}' from config.")
-
+        with open(config_path, "r") as f:
+            agent_configs = yaml.safe_load(f)
     except Exception as e:
-        logging.exception(f"[AgentLoader] Failed to load agents: {e}")
+        logging.error(f"[AgentLoader] Failed to load config: {e}")
+        return
+
+    for agent_name, agent_data in agent_configs.items():
+        try:
+            agent_class = agent_factory(agent_name)
+            register_agent(
+                name=agent_name,
+                agent_class=agent_class,
+                description=agent_data.get("description", ""),
+                model=agent_data.get("model", ""),
+                data_source=agent_data.get("data_source", "")
+            )
+            logging.info(f"[AgentLoader] Registered agent '{agent_name}' from config.")
+        except Exception as e:
+            logging.exception(f"[AgentLoader] Error registering agent '{agent_name}': {e}")
 

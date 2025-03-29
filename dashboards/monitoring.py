@@ -45,3 +45,5 @@ def launch_dashboard(**kwargs):
     dashboard = MonitoringDashboard()
     dashboard.run(**kwargs)
 
+if __name__ == "__main__":
+    launch_dashboard(debug=True, host='0.0.0.0', port=8050)
