@@ -5,23 +5,18 @@ import pandas as pd
 import plotly.graph_objs as go
 from dash.exceptions import PreventUpdate
 
-# Configuration for HTTP server (matches network_monitor.sh)
-HTTP_URL = "http://0.0.0.0:8081"  # Adjust if server runs elsewhere
+HTTP_URL = "http://127.0.0.1:8082"
 HTTP_USER = 'admin'
-HTTP_PASS = 'super!secret'  # Match password from network_monitor.sh
+HTTP_PASS = 'supersecret'
 
 TAB_ID = "network-monitoring"
 TAB_LABEL = "Network Monitoring"
 
 class NetworkMonitoringTab:
-    TAB_ID = "network-monitoring"
-    TAB_LABEL = "Network Monitoring"
-
     def __init__(self):
         self.auth = (HTTP_USER, HTTP_PASS)
 
     def fetch_data(self, endpoint, interface=None):
-        """Fetch data from the network_monitor.sh HTTP server."""
         url = f"{HTTP_URL}{endpoint}"
         if interface:
             url += f"?interface={interface}"
@@ -30,93 +25,65 @@ class NetworkMonitoringTab:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Error fetching {endpoint}: {e}")
+            print(f"[NetworkMonitoring] Error: {e}")
             return []
 
     def render_layout(self):
-        """Define the layout for the network monitoring tab."""
         return html.Div([
-            html.H3("Network Traffic Monitoring", className="text-center my-3"),
-            # Controls
+            html.H3("Network Traffic Monitoring"),
             html.Div([
-                dcc.Dropdown(
-                    id="interface-filter",
-                    options=[],
-                    placeholder="Select Interface",
-                    className="form-control w-25 d-inline-block"
-                ),
+                dcc.Dropdown(id="interface-filter", options=[], placeholder="Select Interface"),
                 html.Button("Refresh", id="refresh-btn", className="btn btn-primary ms-2"),
-                dcc.Interval(id="auto-refresh", interval=60*1000, n_intervals=0),  # Refresh every 60s
+                dcc.Interval(id="auto-refresh", interval=60000, n_intervals=0),
             ], className="mb-3"),
-            # Traffic Graph
             dcc.Graph(id="traffic-graph"),
-            # Device Table
-            html.H4("Discovered Devices", className="mt-4"),
-            dcc.Graph(id="device-table"),  # Using Graph for table
-        ])
+            html.H4("Discovered Devices"),
+            dcc.Graph(id="device-table"),
+        ], className="p-4")
 
     def register_callbacks(self, app):
-        """Register callbacks for interactivity."""
-
         @app.callback(
             Output("interface-filter", "options"),
             Input("auto-refresh", "n_intervals")
         )
-        def update_interface_options(n_intervals):
+        def update_interface_options(n):
             devices = self.fetch_data("/devices")
-            interfaces = sorted(set(d["interface"] for d in devices if d["interface"]))
-            return [{"label": iface, "value": iface} for iface in interfaces]
+            interfaces = sorted(set(d.get("interface") for d in devices if d.get("interface")))
+            return [{"label": i, "value": i} for i in interfaces]
 
         @app.callback(
-            [Output("traffic-graph", "figure"),
-             Output("device-table", "figure")],
-            [Input("refresh-btn", "n_clicks"),
-             Input("auto-refresh", "n_intervals")],
-            [State("interface-filter", "value")]
+            [Output("traffic-graph", "figure"), Output("device-table", "figure")],
+            [Input("refresh-btn", "n_clicks"), Input("auto-refresh", "n_intervals")],
+            State("interface-filter", "value")
         )
         def update_dashboard(n_clicks, n_intervals, interface_filter):
-            # Fetch traffic data
             traffic_data = self.fetch_data("/traffic", interface_filter)
-            if not traffic_data:
-                traffic_fig = go.Figure()
-                traffic_fig.update_layout(title="No Traffic Data Available")
-            else:
+            traffic_fig = go.Figure()
+            if traffic_data:
                 df = pd.DataFrame(traffic_data)
                 df["timestamp"] = pd.to_datetime(df["timestamp"])
-                
-                traffic_fig = go.Figure()
                 for iface in df["interface"].unique():
-                    iface_df = df[df["interface"] == iface]
+                    sub_df = df[df["interface"] == iface]
                     traffic_fig.add_trace(go.Scatter(
-                        x=iface_df["timestamp"],
-                        y=iface_df["id"].cumcount() + 1,
+                        x=sub_df["timestamp"],
+                        y=sub_df["id"].cumcount() + 1,
                         mode="lines",
-                        name=f"{iface} Traffic",
-                        hovertemplate="Time: %{x}<br>Packets: %{y}"
+                        name=f"{iface} Traffic"
                     ))
-                traffic_fig.update_layout(
-                    title="Network Traffic Over Time",
-                    xaxis_title="Time",
-                    yaxis_title="Cumulative Packets",
-                    legend_title="Interface"
-                )
+                traffic_fig.update_layout(title="Traffic", xaxis_title="Time", yaxis_title="Packets")
 
-            # Fetch device data
             device_data = self.fetch_data("/devices", interface_filter)
-            if not device_data:
-                device_fig = go.Figure()
-                device_fig.update_layout(title="No Devices Detected")
-            else:
+            device_fig = go.Figure()
+            if device_data:
                 df_devices = pd.DataFrame(device_data)
-                device_fig = go.Figure(data=[go.Table(
-                    header=dict(values=["IP", "Hostname", "MAC", "Interface", "Last Seen"],
-                                fill_color="paleturquoise",
-                                align="left"),
-                    cells=dict(values=[df_devices["ip"], df_devices["hostname"], df_devices["mac"],
-                                       df_devices["interface"], df_devices["last_seen"]],
-                               fill_color="lavender",
-                               align="left"))
-                ])
-                device_fig.update_layout(title="Network Devices")
-
+                device_fig.add_trace(go.Table(
+                    header=dict(values=list(df_devices.columns), fill_color="lightblue", align="left"),
+                    cells=dict(values=[df_devices[col] for col in df_devices.columns], fill_color="white", align="left")
+                ))
+                device_fig.update_layout(title="Discovered Devices")
             return traffic_fig, device_fig
+
+_tab = NetworkMonitoringTab()
+render_layout = _tab.render_layout  # no parentheses!
+register_callbacks = _tab.register_callbacks
+

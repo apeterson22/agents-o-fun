@@ -1,3 +1,5 @@
+# dashboards/components/trading.py
+
 import dash
 from dash import html, dcc, Input, Output
 import plotly.graph_objs as go
@@ -7,12 +9,15 @@ import pandas as pd
 TAB_ID = "trading"
 TAB_LABEL = "Trading"
 
+_trading_tab = None  # Singleton instance
+
+
 class TradingTab:
     TAB_ID = "trading"
     TAB_LABEL = "Trading"
 
     def __init__(self):
-        self.db_path = "../databases/trades.db"  # Relative to dashboards/
+        self.db_path = "databases/trades.db"  # Adjusted path for consistency
 
     def fetch_trades(self):
         try:
@@ -28,7 +33,7 @@ class TradingTab:
         return html.Div([
             html.H3("Trading Dashboard", className="text-center my-3"),
             dcc.Graph(id="profit-graph"),
-            dcc.Interval(id="trade-refresh", interval=5*1000, n_intervals=0),  # Refresh every 5s
+            dcc.Interval(id="trade-refresh", interval=5 * 1000, n_intervals=0),
         ])
 
     def register_callbacks(self, app):
@@ -59,3 +64,19 @@ class TradingTab:
                     legend_title="Market"
                 )
             return fig
+
+
+# Provide required exports for dashboard loader
+def render_layout():
+    global _trading_tab
+    if _trading_tab is None:
+        _trading_tab = TradingTab()
+    return _trading_tab.render_layout()
+
+
+def register_callbacks(app):
+    global _trading_tab
+    if _trading_tab is None:
+        _trading_tab = TradingTab()
+    _trading_tab.register_callbacks(app)
+

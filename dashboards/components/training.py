@@ -47,9 +47,19 @@ def register_callbacks(app):
         if df.empty:
             return go.Figure(), go.Figure(), go.Figure()
 
-        loss_fig = go.Figure(data=[go.Scatter(x=df["timestamp"], y=df["loss"], mode="lines", name="Loss")])
-        policy_fig = go.Figure(data=[go.Scatter(x=df["timestamp"], y=df["policy_gradient_loss"], mode="lines", name="Policy Gradient Loss")])
-        timestep_fig = go.Figure(data=[go.Scatter(x=df["timestamp"], y=df["total_timesteps"], mode="lines+markers", name="Timesteps")])
+        loss_fig = go.Figure(data=[
+            go.Scatter(x=df["timestamp"], y=df["loss"], mode="lines", name="Loss")
+        ])
+        policy_fig = go.Figure(data=[
+            go.Scatter(x=df["timestamp"], y=df["policy_gradient_loss"], mode="lines", name="Policy Gradient Loss")
+        ])
+        timestep_fig = go.Figure(data=[
+            go.Scatter(x=df["timestamp"], y=df["total_timesteps"], mode="lines+markers", name="Timesteps")
+        ])
 
         return loss_fig, policy_fig, timestep_fig
+
+# Exports for the dashboard system
+def render_layout():
+    return layout()
 

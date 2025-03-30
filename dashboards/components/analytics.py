@@ -62,3 +62,8 @@ def register_callbacks(app):
         fig.add_trace(go.Scatter(x=df["timestamp"], y=df["reward"], mode="lines+markers", name="Reward"))
         fig.add_trace(go.Scatter(x=df["timestamp"], y=df["accuracy"], mode="lines+markers", name="Accuracy"))
         return fig
+
+# Export standard
+def render_layout():
+    return layout()
+
