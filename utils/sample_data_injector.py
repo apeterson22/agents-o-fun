@@ -1,44 +1,51 @@
-# utils/sample_data_injector.py
-import sqlite3
-import os
+import threading
+import time
+import schedule
 import logging
-import random
-from datetime import datetime, timedelta
-from configs import paths
+from agents.trading_agent import run_trading_agent
+from agents.marketing_agent import run_marketing_agent
 
-#DB_PATH = os.path.join("databases", "training_data.db")
+log = logging.getLogger(__name__)
 
-def run_data_injection(num_records=300):
-    try:
-        conn = sqlite3.connect(paths.TRAINING_DATA_DB)
-        c = conn.cursor()
+class SampleDataInjector:
+    def __init__(self):
+        self.running = False
+        self.thread = None
+        self.scheduler_config = {
+            "interval_minutes": 5,
+            "enabled": True
+        }
 
-        # Ensure the table has the correct columns
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS training_samples (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                feature1 REAL,
-                feature2 REAL,
-                feature3 REAL,
-                label INTEGER,
-                timestamp TEXT
-            )
-        """)
+    def inject_once(self):
+        log.info("Injecting one-time sample data.")
+        run_trading_agent()
+        run_marketing_agent()
 
-        now = datetime.utcnow()
-        for _ in range(num_records):
-            row = (
-                random.uniform(-1, 1),
-                random.uniform(0, 100),
-                random.uniform(10, 500),
-                random.randint(0, 2),
-                (now + timedelta(seconds=random.randint(0, 10000))).isoformat()
-            )
-            c.execute("INSERT INTO training_samples (feature1, feature2, feature3, label, timestamp) VALUES (?, ?, ?, ?, ?)", row)
+    def _scheduler_loop(self):
+        log.info("Starting background data injection scheduler...")
+        schedule.every(self.scheduler_config["interval_minutes"]).minutes.do(self.inject_once)
+        while self.running:
+            schedule.run_pending()
+            time.sleep(1)
 
-        conn.commit()
-        conn.close()
-        logging.info(f"{num_records} synthetic training samples injected.")
-    except Exception as e:
-        logging.error(f"Data injection failed: {str(e)}")
+    def start_scheduler(self):
+        if not self.running:
+            self.running = True
+            self.thread = threading.Thread(target=self._scheduler_loop, daemon=True)
+            self.thread.start()
 
+    def stop_scheduler(self):
+        self.running = False
+        log.info("Stopped data injection scheduler.")
+
+    def update_config(self, interval_minutes=None, enabled=None):
+        if interval_minutes is not None:
+            self.scheduler_config["interval_minutes"] = interval_minutes
+        if enabled is not None:
+            self.scheduler_config["enabled"] = enabled
+        if self.scheduler_config["enabled"]:
+            self.start_scheduler()
+        else:
+            self.stop_scheduler()
+
+injector = SampleDataInjector()

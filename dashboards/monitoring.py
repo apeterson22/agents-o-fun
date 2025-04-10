@@ -5,14 +5,15 @@ from dashboards.components import load_tab_components
 external_stylesheets = ['https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css']
 
 class MonitoringDashboard:
-    def __init__(self):
+    def __init__(self, agent_manager):
+        self.agent_manager = agent_manager # store the AgentManger Instance
         self.app = dash.Dash(
             __name__,
             external_stylesheets=external_stylesheets,
             suppress_callback_exceptions=True
         )
         self.server = self.app.server
-        self.tab_modules = load_tab_components()
+        self.tab_modules = load_tab_components(agent_manager=self.agent_manager)  # Pass to tab
         self._setup_layout()
         self._register_callbacks()
 
@@ -41,8 +42,8 @@ class MonitoringDashboard:
     def run(self, **kwargs):
         self.app.run(**kwargs)
 
-def launch_dashboard(**kwargs):
-    dashboard = MonitoringDashboard()
+def launch_dashboard(agent_manager, **kwargs):
+    dashboard = MonitoringDashboard(agent_manager=agent_manager)
     dashboard.run(**kwargs)
 
 if __name__ == "__main__":

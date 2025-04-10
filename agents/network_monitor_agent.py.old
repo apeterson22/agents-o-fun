@@ -1,4 +1,3 @@
-# agents/network_monitor_agent.py
 import sqlite3
 import time
 import threading
@@ -12,7 +11,16 @@ DB_FILE = "databases/network_traffic.db"
 
 @register_agent("network-monitoring", description="Monitors network activity and optimizes routing", model="custom", data_source="local_traffic")
 class NetworkMonitorAgent:
-    def __init__(self):
+    def __init__(self, target_ip="192.168.0.1", username="admin", password=""):
+        """
+        Initialize the Network Monitor Agent.
+        
+        Parameters:
+          target_ip (str): IP address of the target router/modem. 
+                           Defaults to local network ("127.0.0.1") but can be set via dashboard.
+          username (str): Login username for the device.
+          password (str): Login password for the device.
+        """
         self.status = "idle"
         self.scan_mode = "scheduled"
         self.scan_interval = 300  # 5 minutes for device scans
@@ -20,9 +28,19 @@ class NetworkMonitorAgent:
         self.last_scan_time = 0
         self.last_optimization_time = 0
         self.db_path = DB_FILE
-        # Remove parameters that are not used by the utility functions:
-        # self.target_ip, self.username, self.password are not passed to get_traffic_stats/get_routing_settings.
+
+        # Configuration for external device access:
+        self.target_ip = target_ip
+        self.username = username
+        self.password = password
+
+        self.thread = threading.Thread(target=self.scheduler_loop, daemon=True)
+        self.running = True
         self._setup_database()
+        self.thread.start()
+
+    def run(self):
+        self.scheduler_loop()
 
     def _setup_database(self):
         with sqlite3.connect(self.db_path) as conn:
@@ -66,8 +84,14 @@ class NetworkMonitorAgent:
             )
 
     def scheduler_loop(self):
-        # Instead of running continuously, we run only one cycle.
-        self.analyze_and_optimize()
+        while self.running:
+            now = time.time()
+            if self.scan_mode == "scheduled" and now - self.last_scan_time >= self.scan_interval:
+                self.run_scan()
+            if now - self.last_optimization_time >= self.optimization_interval:
+                self.analyze_and_optimize()
+                self.last_optimization_time = now
+            time.sleep(5)
 
     def save_traffic_data(self, traffic_stats):
         with sqlite3.connect(self.db_path) as conn:
@@ -79,8 +103,33 @@ class NetworkMonitorAgent:
                 )
         log.info("[NetworkMonitorAgent] Saved traffic data.")
 
+    def run_scan(self, trigger="auto"):
+        try:
+            self.status = "scanning"
+            self.last_scan_time = time.time()
+            self.log("info", f"Triggered scan ({trigger}) on target {self.target_ip}")
+            start = time.time()
+
+            # Pass the target IP and credentials to the scanning function.
+            devices = scan_network_devices(target_ip=self.target_ip, username=self.username, password=self.password)
+            device_count = sum(len(dev_list) for dev_list in devices.values())
+            duration = time.time() - start
+
+            with sqlite3.connect(self.db_path) as conn:
+                for iface, dev_list in devices.items():
+                    conn.execute(
+                        "INSERT INTO network_metrics (timestamp, scan_duration, device_count, interface) VALUES (?, ?, ?, ?)",
+                        (datetime.now().isoformat(), duration, len(dev_list), iface)
+                    )
+            self.log("info", f"Completed scan: {device_count} devices in {duration:.2f}s")
+        except Exception as e:
+            self.log("error", f"Scan failed: {e}")
+        finally:
+            self.status = "idle"
+
     def analyze_and_optimize(self):
-        # Call utility functions without unsupported extra parameters.
+
+        # Retrieve traffic data (this function may also be extended to accept target_ip and credentials)
         traffic_stats = get_traffic_stats()
         if not traffic_stats:
             return
@@ -122,23 +171,22 @@ class NetworkMonitorAgent:
                     [(ip, usage["bandwidth_mbps"]) for (ip, ifc), usage in device_usage.items() if ifc == iface_name],
                     key=lambda x: x[1],
                     reverse=True
-                )[:3]
+                )[:3]  # Top 3 bandwidth users
+
                 for ip, _ in top_users:
-                    current_rules = [rule for rule in iface.get("qos_rules", []) if rule.get("device_ip") == ip]
-                    if not current_rules or current_rules[0].get("priority") != "high":
-                        iface["qos_rules"] = [rule for rule in iface.get("qos_rules", []) if rule.get("device_ip") != ip]
-                        iface.setdefault("qos_rules", []).append({"device_ip": ip, "priority": "high"})
+                    current_rules = [rule for rule in iface["qos_rules"] if rule["device_ip"] == ip]
+                    if not current_rules or current_rules[0]["priority"] != "high":
+                        iface["qos_rules"] = [rule for rule in iface["qos_rules"] if rule["device_ip"] != ip]
+                        iface["qos_rules"].append({"device_ip": ip, "priority": "high"})
                         self.log("info", f"Set high priority for device {ip} on {iface_name}")
 
-        update_routing_settings(routing_settings)
+        update_routing_settings(routing_settings, target_ip=self.target_ip, username=self.username, password=self.password)
         self.log("info", "Applied routing optimizations.")
 
-    def run(self):
-        """
-        Run the network analysis once.
-        (This method will be triggered manually via the dashboard.)
-        """
-        self.scheduler_loop()
-        self.status = "stopped"
+    def manual_trigger(self):
+        self.run_scan(trigger="manual")
 
+    def stop(self):
+        self.running = False
+        self.thread.join()
 

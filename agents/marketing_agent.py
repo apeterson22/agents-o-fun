@@ -1,37 +1,32 @@
-from core.agent_registry import register_agent
 import logging
+import sqlite3
+from pytrends.request import TrendReq
+from datetime import datetime
 
-@register_agent("marketing-guru", description="AI agent for marketing strategy", model="LLM", data_source="social_media, trend_data")
-class MarketingGuru:
-    def __init__(self):
-        self.status = "initialized"
-        self.logger = logging.getLogger("marketing-guru")
-        self.metadata = {
-            "description": "AI agent for marketing strategy",
-            "model": "LLM",
-            "data_source": "social_media, trend_data"
-        }
+log = logging.getLogger(__name__)
+DB_PATH = "databases/training_data.db"
 
-    def start(self):
-        self.status = "running"
-        self.logger.info("[MARKETING-GURU AGENT] Running agent: AI agent for marketing strategy")
-        self.logger.info("  • Model: LLM")
-        self.logger.info("  • Data Source: social_media, trend_data")
+class MarketingAgent:
+    def __init__(self, terms=None):
+        self.pytrends = TrendReq()
+        self.terms = terms or ["ai", "blockchain", "quantum computing"]
 
-    def stop(self):
-        self.status = "stopped"
-        self.logger.info("[MARKETING-GURU AGENT] Agent stopped.")
+    def fetch_trends(self):
+        self.pytrends.build_payload(self.terms, timeframe='now 1-d')
+        df = self.pytrends.interest_over_time()
+        if "isPartial" in df.columns:
+            df = df.drop(columns=["isPartial"])
+        return df
 
-    def health_check(self):
-        return {
-            "status": self.status,
-            "uptime": "TODO: add uptime tracking",
-            "last_error": None
-        }
+    def save_to_db(self, df):
+        conn = sqlite3.connect(DB_PATH)
+        df.to_sql("google_trends", conn, if_exists="append", index=True)
+        conn.close()
 
-    def get_metrics(self):
-        return {
-            "custom_stat_1": 0,
-            "custom_stat_2": 0,
-            "error_rate": 0.0
-        }
+    def run(self):
+        try:
+            df = self.fetch_trends()
+            self.save_to_db(df)
+            log.info("MarketingAgent collected and saved trend data.")
+        except Exception as e:
+            log.error(f"MarketingAgent failed: {e}")

@@ -1,5 +1,5 @@
 # dashboards/components/trading.py
-
+import logging
 import dash
 from dash import html, dcc, Input, Output
 import plotly.graph_objs as go
@@ -23,10 +23,12 @@ class TradingTab:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 df = pd.read_sql_query("SELECT * FROM trades ORDER BY timestamp DESC LIMIT 1000", conn)
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
-            return df
+                logging.info(f"Fetched {len(df)} trades from {self.db_path}")
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                return df
         except Exception as e:
-            print(f"Error fetching trades: {e}")
+            logging.error(f"Error fetching trades: {e}")
+            print(f"We got an Error fetching trades: {e}")
             return pd.DataFrame()
 
     def render_layout(self):

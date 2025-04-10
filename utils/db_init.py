@@ -21,6 +21,8 @@ def init_databases():
                     timestamp TEXT,
                     symbol TEXT,
                     action TEXT,
+                    market TEXT,
+                    profit REAL,
                     price REAL,
                     quantity REAL,
                     tag TEXT

@@ -3,7 +3,9 @@ import pkgutil
 import importlib
 import dashboards.components as components_pkg
 
-def load_tab_components():
+def load_tab_components(agent_manager=None):
+    from .network_monitoring import NetworkMonitoringTab
+    return [NetworkMonitoringTab(agent_manager=agent_manager)]
     tab_modules = []
 
     for loader, module_name, is_pkg in pkgutil.iter_modules(components_pkg.__path__):
