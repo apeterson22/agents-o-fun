@@ -1,3 +1,4 @@
+# main.py
 import logging
 import threading
 import time
@@ -9,21 +10,25 @@ from core.agent_registry import get_registered_agents
 from core.agent_loader import load_agents_from_config
 from core.agent_manager import AgentManager
 
-# Import agents to ensure registration via decorators.
+# Import agents to ensure registration
 from agents.trading_agent import TradingAgent
 from agents.crypto_agent import CryptoAgent
 from agents.betting_agent import BettingAgent
 from agents.ml_predictor_agent import MLPredictorAgent
 from agents.marketing_guru_agent import MarketingGuruAgent
 from agents.network_monitor_agent import NetworkMonitorAgent
-from agents.Shopify_agent import *  # Adjust if specific symbols needed
+from agents.Shopify_agent import ShopifyAgent
 from agents.decision_engine_agent import DecisionEngineAgent
 
 logging.basicConfig(
     filename='logs/main_agent.log',
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s]: %(message)s'
+    format='%(asctime)s [%(levelname)s]: %(message)s',
+    handlers=[logging.FileHandler('logs/main_agent.log'), logging.StreamHandler()]
 )
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logging.getLogger('').addHandler(console)
 
 def start_trainer():
     try:
@@ -38,29 +43,28 @@ def start_dashboard(agent_manager):
     try:
         logging.info("Launching dashboard UI service...")
         launch_dashboard(agent_manager=agent_manager, host="0.0.0.0")
+        logging.info("Dashboard launched successfully.")
     except Exception as e:
         logging.exception(f"Dashboard thread failed: {e}")
+        raise
 
 def main():
     logging.info("Initializing databases...")
     init_databases()
 
-    # Load dynamic agent registrations (from config file and decorators)
+    # Load agent configurations
     load_agents_from_config()
     registered_agents = get_registered_agents()
     logging.info(f"Registered Agents: {registered_agents}")
 
-    # Initialize the Agent Manager to control agents.
+    # Initialize Agent Manager
     manager = AgentManager()
 
-    # Start dashboard and RL trainer threads.
-    dashboard_thread = threading.Thread(target=start_dashboard, args=(manager,), daemon=True)
+    # Start RL trainer thread
     trainer_thread = threading.Thread(target=start_trainer, daemon=True)
-
-    dashboard_thread.start()
     trainer_thread.start()
 
-    # Start all registered agents using the Agent Manager.
+    # Start all registered agents
     for agent_id in registered_agents.keys():
         try:
             result = manager.start_agent(agent_id)
@@ -68,7 +72,11 @@ def main():
         except Exception as e:
             logging.error(f"Failed to start agent {agent_id}: {e}")
 
-    # Keep the main thread alive, allowing for graceful shutdown.
+    # Start dashboard in a separate thread
+    dashboard_thread = threading.Thread(target=start_dashboard, args=(manager,), daemon=True)
+    dashboard_thread.start()
+
+    # Keep main thread alive
     try:
         while True:
             time.sleep(10)
@@ -84,4 +92,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

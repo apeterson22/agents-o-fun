@@ -95,7 +95,7 @@ class CryptoAgent:
         # Compute technical indicators using the 1D Series
         df["SMA20"] = close_series.rolling(window=20).mean()
         df["EMA10"] = close_series.ewm(span=10, adjust=False).mean()
-        df["Return"] = close_series.pct_change()  # use the same series for percentage change
+        df["Return"] = close_series.pct_change(fill_method=None)  # use the same series for percentage change
 
         df.dropna(inplace=True)
 

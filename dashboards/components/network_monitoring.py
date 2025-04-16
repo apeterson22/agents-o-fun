@@ -1,3 +1,4 @@
+# dashboards/components/network_monitoring.py (full corrected file)
 import dash
 from dash import html, dcc, Input, Output, State
 import requests
@@ -13,7 +14,10 @@ TAB_ID = "network-monitoring"
 TAB_LABEL = "Network Monitoring"
 
 class NetworkMonitoringTab:
-    def __init__(self):
+    TAB_ID = TAB_ID
+    TAB_LABEL = TAB_LABEL
+
+    def __init__(self, agent_manager):
         self.agent_manager = agent_manager
         self.auth = (HTTP_USER, HTTP_PASS)
 
@@ -35,7 +39,7 @@ class NetworkMonitoringTab:
             html.Div([
                 html.Button("Start Network Monitoring", id="start-network-monitoring-btn", className="btn btn-success"),
                 html.Div(id="network-monitoring-status", className="mt-2"),
-                dcc.Interval(id="status-interval", interval=5000, n_intervals=0),  # Check status every 5 seconds
+                dcc.Interval(id="status-interval", interval=5000, n_intervals=0),
                 dcc.Dropdown(id="interface-filter", options=[], placeholder="Select Interface"),
                 html.Button("Refresh", id="refresh-btn", className="btn btn-primary ms-2"),
                 dcc.Interval(id="auto-refresh", interval=60000, n_intervals=0),
@@ -63,7 +67,6 @@ class NetworkMonitoringTab:
             State("interface-filter", "value")
         )
         def update_dashboard(n_clicks, n_intervals, interface_filter):
-            # Traffic Graph
             traffic_data = self.fetch_data("/traffic-stats", interface_filter)
             traffic_fig = go.Figure()
             if traffic_data:
@@ -79,7 +82,6 @@ class NetworkMonitoringTab:
                     ))
                 traffic_fig.update_layout(title="Network Traffic", xaxis_title="Time", yaxis_title="Total Bytes")
 
-            # Device Table
             device_data = self.fetch_data("/devices", interface_filter)
             device_fig = go.Figure()
             if device_data:
@@ -90,7 +92,6 @@ class NetworkMonitoringTab:
                 ))
                 device_fig.update_layout(title="Discovered Devices")
 
-            # Routing Settings
             settings = self.fetch_data("/routing-settings")
             settings_display = html.Pre(json.dumps(settings, indent=2)) if settings else html.Div(["No routing settings available."])
 
@@ -122,6 +123,4 @@ class NetworkMonitoringTab:
                     return False, html.Div("Network Monitoring has not been started.", className="alert alert-info")
             return False, html.Div("Agent Manager not available.", className="alert alert-danger")
 
-_tab = NetworkMonitoringTab()
-render_layout = _tab.render_layout
-register_callbacks = _tab.register_callbacks
+# No instantiation here; let load_tab_components handle it

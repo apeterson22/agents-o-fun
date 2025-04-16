@@ -1,69 +1,26 @@
 # core/agent_manager.py
 import logging
-import threading
-from core.agent_registry import get_registered_agents
+from core.agent_registry import control_agent, get_registered_agents
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
 class AgentManager:
     def __init__(self):
-        self.instances = {}
-        self.threads = {}
-        self.lock = threading.Lock()
+        self.agents = get_registered_agents()
 
-    def get_agent_status(self, agent_id):
-        with self.lock:
-            if agent_id in self.instances:
-                thread = self.threads[agent_id]
-                return "running" if thread.is_alive() else "stopped"
-            return "not started"
-
-    def start_agent(self, agent_id, **kwargs):
-        with self.lock:
-            agents = get_registered_agents()
-            agent_info = agents.get(agent_id)
-            if not agent_info:
-                raise ValueError(f"Agent '{agent_id}' not registered.")
-
-            agent_class = agent_info["class"]
-            try:
-                instance = agent_class(**kwargs)
-                thread = threading.Thread(target=instance.run, name=agent_id, daemon=True)
-                self.instances[agent_id] = instance
-                self.threads[agent_id] = thread
-                thread.start()
-                logging.info(f"Agent {agent_id} started.")
-                return f"Agent {agent_id} started."
-            except Exception as e:
-                logging.error(f"Failed to start agent {agent_id}: {e}")
-                return f"Failed to start agent {agent_id}: {e}"
+    def start_agent(self, agent_id):
+        """Start an agent by ID."""
+        if agent_id not in self.agents:
+            raise ValueError(f"Agent '{agent_id}' not found")
+        return control_agent(agent_id, "start")
 
     def stop_agent(self, agent_id):
-        with self.lock:
-            if agent_id in self.instances:
-                agent = self.instances[agent_id]
-                if hasattr(agent, "stop"):
-                    try:
-                        agent.stop()
-                    except Exception as e:
-                        logging.error(f"Error stopping agent {agent_id}: {e}")
-                thread = self.threads[agent_id]
-                thread.join(timeout=5)
-                del self.instances[agent_id]
-                del self.threads[agent_id]
-                logging.info(f"Agent {agent_id} stopped.")
-                return f"Agent {agent_id} stopped."
-            return f"Agent {agent_id} not found."
+        """Stop an agent by ID."""
+        if agent_id not in self.agents:
+            raise ValueError(f"Agent '{agent_id}' not found")
+        return control_agent(agent_id, "stop")
 
-    def restart_agent(self, agent_id, **kwargs):
-        self.stop_agent(agent_id)
-        return self.start_agent(agent_id, **kwargs)
-
-    def get_status(self):
-        with self.lock:
-            return {
-                aid: {
-                    "alive": thread.is_alive(),
-                    "class": instance.__class__.__name__,
-                }
-                for aid, (instance, thread) in zip(self.instances.keys(), zip(self.instances.values(), self.threads.values()))
-            }
-
+    def get_agent_status(self, agent_id):
+        """Get the status of an agent."""
+        agent = self.agents.get(agent_id)
+        return agent["status"] if agent else "unknown"

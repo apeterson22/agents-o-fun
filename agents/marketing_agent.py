@@ -5,6 +5,7 @@ from datetime import datetime
 
 log = logging.getLogger(__name__)
 DB_PATH = "databases/training_data.db"
+pd.set_option('future.no_silent_downcasting', True)
 
 class MarketingAgent:
     def __init__(self, terms=None):

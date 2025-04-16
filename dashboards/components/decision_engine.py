@@ -9,6 +9,8 @@ TAB_ID = "decision-engine"
 TAB_LABEL = "Decision Engine"
 
 class DecisionEngineTab:
+    def __init__(self, agent_manager=None):
+        self.agent_manager = agent_manager
     TAB_ID = TAB_ID
     TAB_LABEL = TAB_LABEL
 

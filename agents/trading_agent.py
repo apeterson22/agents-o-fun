@@ -1,3 +1,4 @@
+# agents/trading_agent.py
 import logging
 import yfinance as yf
 import sqlite3
@@ -5,18 +6,19 @@ import time
 from datetime import datetime
 from core.agent_registry import register_agent
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
-DB_PATH = "databases/trades.db"
+DB_PATH = "trades.db"
 
 @register_agent("trading", description="Fetches and stores stock market data", model="Finance RL Model", data_source="Yahoo Finance")
 class TradingAgent:
     def __init__(self, tickers=None, period="1d", interval="5m", fetch_count=5, continuous=False, run_interval=300):
         """
         Initialize the TradingAgent.
-        
-        Parameters:
+
+        Args:
             tickers (list): List of ticker symbols to fetch data for.
-                            Defaults to ["AAPL", "GOOGL", "MSFT", "AMD", "TSLA"].
+                           Defaults to ["AAPL", "GOOGL", "MSFT", "AMD", "TSLA"].
             period (str): Data period to fetch from yfinance. Defaults to "1d".
             interval (str): Data interval to fetch from yfinance. Defaults to "5m".
             fetch_count (int): Number of latest records to process per ticker.
@@ -30,11 +32,12 @@ class TradingAgent:
         self.continuous = continuous
         self.run_interval = run_interval
         self.status = "initialized"
-    
+        self.last_error = None
+
     def fetch_stock_data(self):
         """
         Fetch recent stock data for each ticker.
-        
+
         Returns:
             list: A list of dictionaries containing market data.
         """
@@ -46,7 +49,6 @@ class TradingAgent:
                 if hist.empty:
                     log.warning(f"No data returned for {ticker}")
                     continue
-                # Process only the last 'fetch_count' records
                 for index, row in hist.tail(self.fetch_count).iterrows():
                     record = {
                         "timestamp": index.to_pydatetime().isoformat(),
@@ -62,12 +64,13 @@ class TradingAgent:
                 log.info(f"Fetched {self.fetch_count} records for {ticker}.")
             except Exception as e:
                 log.error(f"Error fetching data for {ticker}: {e}")
+                self.last_error = str(e)
         return result
 
     def save_to_db(self, entries):
         """
         Save market data entries into the database.
-        
+
         The table 'live_trades' includes columns for open, high, low, close, volume, and a fetched_at timestamp.
         """
         try:
@@ -96,6 +99,7 @@ class TradingAgent:
             log.info(f"Saved {len(entries)} records to the database.")
         except Exception as e:
             log.error(f"Error saving to DB: {e}")
+            self.last_error = str(e)
 
     def collect_and_store_data(self):
         """
@@ -108,11 +112,12 @@ class TradingAgent:
             log.info("[TRADING AGENT] Data collection complete.")
         else:
             log.warning("[TRADING AGENT] No data fetched.")
+            self.last_error = "No data fetched."
 
     def run(self):
         """
         Run the trading agent.
-        
+
         If continuous mode is enabled, the agent collects data periodically.
         Otherwise, it performs a single data collection cycle.
         """
@@ -126,6 +131,27 @@ class TradingAgent:
             else:
                 self.collect_and_store_data()
         except Exception as e:
-            log.error(f"TradingAgent encountered an error: {e}")
+            log.error(f"[TRADING AGENT] Encountered an error: {e}")
             self.status = "error"
+            self.last_error = str(e)
 
+    def stop(self):
+        """
+        Stop the trading agent.
+        """
+        self.status = "stopped"
+        log.info("[TRADING AGENT] Agent stopped.")
+
+    def health_check(self):
+        """
+        Perform a health check on the agent.
+
+        Returns:
+            dict: Health status information.
+        """
+        return {
+            "status": self.status,
+            "last_error": self.last_error,
+            "tickers": self.tickers,
+            "last_run": datetime.utcnow().isoformat()
+        }
