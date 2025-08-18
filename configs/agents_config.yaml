@@ -26,20 +26,15 @@ agents:
     description: "Monitors network activity and optimizes routing"
     model: "custom"
     data_source: "local_traffic"
-    # Optional: additional parameters for router/modem access:
     target_ip: "192.168.1.1"
     username: "admin"
     password: "your_password_here"
-data_feeds:
-  forex:
-    apiKey: "YOUR_ALPHA_VANTAGE_API_KEY"
-  crypto:
-    apiKey: "YOUR_CRYPTO_API_KEY"
-universe:
-  - AAPL
-  - GOOGL
-  - MSFT
-  - TSLA
-  - BTC-USD
-  - EURUSD
-  - NFLX
+  shopify:
+    description: "Optimizes Shopify store based on trends and insights"
+    model: "LLM"
+    data_source: "Google Trends, Shopify Data"
+  decision-engine:
+    description: "Aggregates signals from all agents and executes trade decisions"
+    model: "Composite Decision Engine"
+    data_source: "multiple_agents"
+

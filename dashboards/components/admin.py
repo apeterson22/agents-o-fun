@@ -1,4 +1,3 @@
-# dashboards/components/admin.py
 import logging
 from dash import html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
@@ -6,9 +5,12 @@ from core.agent_registry import get_registered_agents, control_agent
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
+TAB_ID = "admin"
+TAB_LABEL = "Admin"
+
 class AdminTab:
-    TAB_ID = "admin"
-    TAB_LABEL = "Admin"
+    TAB_ID = TAB_ID
+    TAB_LABEL = TAB_LABEL
 
     def __init__(self, agent_manager=None):
         self.agent_manager = agent_manager
@@ -71,9 +73,9 @@ class AdminTab:
     def register_callbacks(self, app):
         @app.callback(
             Output("multi-agent-status", "children"),
-            Input("multi-agent-btn", "n_clicks"),
-            State("multi-agent-dropdown", "value"),
-            State("multi-action-dropdown", "value"),
+            [Input("multi-agent-btn", "n_clicks")],
+            [State("multi-agent-dropdown", "value"),
+             State("multi-action-dropdown", "value")],
             prevent_initial_call=True
         )
         def handle_multi(n, agent_name, action):
@@ -83,16 +85,20 @@ class AdminTab:
             logging.info(f"[AdminPanel] {agent_name}: {result}")
             return html.Div(f"{agent_name}: {result}", className="alert alert-info")
 
-        for agent_name in get_registered_agents():
+        for agent_name in get_registered_agents().keys():
             @app.callback(
                 Output(f"status-{agent_name}", "children"),
-                Input(f"btn-{agent_name}", "n_clicks"),
-                State(f"action-{agent_name}", "value"),
+                [Input(f"btn-{agent_name}", "n_clicks")],
+                [State(f"action-{agent_name}", "value")],
                 prevent_initial_call=True
             )
-            def callback(n_clicks, selected_action):
+            def update_status(n_clicks, selected_action, agent_name=agent_name):
                 if not selected_action:
                     return html.Span("Status: No action selected", className="text-warning")
                 result = control_agent(agent_name, selected_action)
                 logging.info(f"[AdminPanel] {agent_name}: {selected_action} -> {result}")
                 return html.Span(f"Status: {result}", className="text-success")
+
+render_layout = AdminTab().render_layout
+register_callbacks = AdminTab().register_callbacks
+

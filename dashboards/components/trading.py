@@ -1,7 +1,5 @@
-# dashboards/components/trading.py
 import logging
-import dash
-from dash import html, dcc, Input, Output
+from dash import html, dcc, Output, Input
 import plotly.graph_objs as go
 import sqlite3
 import pandas as pd
@@ -9,15 +7,12 @@ import pandas as pd
 TAB_ID = "trading"
 TAB_LABEL = "Trading"
 
-_trading_tab = None  # Singleton instance
-
-
 class TradingTab:
-    TAB_ID = "trading"
-    TAB_LABEL = "Trading"
+    TAB_ID = TAB_ID
+    TAB_LABEL = TAB_LABEL
 
     def __init__(self):
-        self.db_path = "databases/trades.db"  # Adjusted path for consistency
+        self.db_path = "databases/trades.db"  # Adjusted as needed
 
     def fetch_trades(self):
         try:
@@ -28,14 +23,13 @@ class TradingTab:
                 return df
         except Exception as e:
             logging.error(f"Error fetching trades: {e}")
-            print(f"We got an Error fetching trades: {e}")
             return pd.DataFrame()
 
     def render_layout(self):
         return html.Div([
             html.H3("Trading Dashboard", className="text-center my-3"),
             dcc.Graph(id="profit-graph"),
-            dcc.Interval(id="trade-refresh", interval=5 * 1000, n_intervals=0),
+            dcc.Interval(id="trade-refresh", interval=5000, n_intervals=0),
         ])
 
     def register_callbacks(self, app):
@@ -67,18 +61,6 @@ class TradingTab:
                 )
             return fig
 
-
-# Provide required exports for dashboard loader
-def render_layout():
-    global _trading_tab
-    if _trading_tab is None:
-        _trading_tab = TradingTab()
-    return _trading_tab.render_layout()
-
-
-def register_callbacks(app):
-    global _trading_tab
-    if _trading_tab is None:
-        _trading_tab = TradingTab()
-    _trading_tab.register_callbacks(app)
+render_layout = TradingTab().render_layout
+register_callbacks = TradingTab().register_callbacks
 

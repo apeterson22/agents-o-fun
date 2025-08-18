@@ -1,4 +1,3 @@
-# agents/ml_predictor_agent.py
 import logging
 import sqlite3
 from datetime import datetime, timedelta
@@ -9,68 +8,51 @@ import yfinance as yf
 from ta.momentum import RSIIndicator
 from ta.trend import SMAIndicator, EMAIndicator
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
-from xgboost import XGBClassifier, XGBRegressor
+from sklearn.metrics import accuracy_score
+from xgboost import XGBClassifier
 
 from core.agent_registry import register_agent
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 log = logging.getLogger("MLPredictorAgent")
 DB_PATH = "training_data.db"
 
-@register_agent("ml-predictor", description="ML model for predicting stock price direction",
-                model="XGBoost Model", data_source="yfinance, indicators")
+@register_agent("ml-predictor",
+                description="ML model for predicting stock price direction",
+                model="XGBoost Classifier",
+                data_source="yfinance, indicators")
 class MLPredictorAgent:
-    def __init__(self, mode="classification", ticker="AAPL"):
-        self.mode = mode
-        self.ticker = ticker
+    def __init__(self):
+        self.model = XGBClassifier(use_label_encoder=False, eval_metric="logloss")
         self.last_prediction_time = None
-        self.classification_features = ["Close", "Volume", "SMA_10", "EMA_10", "RSI"]
-        self.regression_features = ["Open", "High", "Low", "Close", "Volume", "SMA_20", "EMA_20", "Momentum"]
-        
-        if mode == "classification":
-            self.model = XGBClassifier(use_label_encoder=False, eval_metric="logloss")
-        elif mode == "regression":
-            self.model = XGBRegressor(objective="reg:squarederror", n_estimators=100)
-        else:
-            raise ValueError("Unsupported mode. Choose 'classification' or 'regression'.")
+        self.ticker = "AAPL"  # Default ticker; may be updated dynamically
 
-    def fetch_data(self, ticker=None, period="30d", interval="15m"):
-        ticker = ticker or self.ticker
+    def fetch_data(self, ticker="AAPL", period="30d", interval="15m"):
         df = yf.download(ticker, period=period, interval=interval)
         if df.empty:
             log.warning(f"No data returned for {ticker}")
             return None
-        # Ensure Close is a Series
+        # Ensure the "Close" column is a one-dimensional Series.
         close_series = df["Close"].squeeze()
         df["SMA_10"] = SMAIndicator(close_series, window=10).sma_indicator()
         df["EMA_10"] = EMAIndicator(close_series, window=10).ema_indicator()
         df["RSI"] = RSIIndicator(close_series, window=14).rsi()
-        df["SMA_20"] = close_series.rolling(window=20).mean()
-        df["EMA_20"] = close_series.ewm(span=20, adjust=False).mean()
-        df["Momentum"] = close_series - close_series.shift(5)
         df.dropna(inplace=True)
-        log.info(f"[MLPredictorAgent] Fetched data for {ticker}, shape: {df.shape}, columns: {df.columns.tolist()}")
         return df
 
     def prepare_features(self, df):
         df["Target"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
-        X = df[self.classification_features]
+        features = ["Close", "Volume", "SMA_10", "EMA_10", "RSI"]
+        X = df[features]
         y = df["Target"]
-        log.info(f"[MLPredictorAgent] Classification features: {self.classification_features}, X shape: {X.shape}")
         return train_test_split(X, y, test_size=0.2, shuffle=False)
 
     def train(self, X_train, y_train):
-        log.info(f"[MLPredictorAgent] Training model with X_train shape: {X_train.shape}")
         self.model.fit(X_train, y_train)
 
     def predict(self, X_test):
-        log.info(f"[MLPredictorAgent] Predicting with X_test shape: {X_test.shape}")
-        if X_test.ndim == 1:
-            X_test = X_test.reshape(1, -1)
-        preds = self.model.predict(X_test)
-        probs = self.model.predict_proba(X_test)[:, 1] if self.mode == "classification" else None
-        return preds, probs
+        predictions = self.model.predict(X_test)
+        probabilities = self.model.predict_proba(X_test)[:, 1]
+        return predictions, probabilities
 
     def save_predictions(self, timestamps, predictions, confidences):
         conn = sqlite3.connect(DB_PATH)
@@ -99,7 +81,7 @@ class MLPredictorAgent:
         }
         for tf, future_time in future_times.items():
             pred = int(predictions[-1])
-            conf = float(confidences[-1]) if confidences is not None else 0.0
+            conf = float(confidences[-1])
             cursor.execute(
                 "INSERT INTO ml_predictions (timestamp, prediction, confidence, timeframe) VALUES (?, ?, ?, ?)",
                 (future_time.isoformat(), pred, conf, tf)
@@ -110,82 +92,18 @@ class MLPredictorAgent:
     def run_classification(self):
         df = self.fetch_data(ticker=self.ticker)
         if df is None or df.empty:
-            log.warning("[MLPredictorAgent] No data fetched for classification.")
+            log.warning("No data available for classification.")
             return
         X_train, X_test, y_train, y_test = self.prepare_features(df)
         self.train(X_train, y_train)
         y_pred, y_conf = self.predict(X_test)
-        acc = accuracy_score(y_test, y_pred)
-        log.info(f"[MLPredictorAgent] Classification Accuracy: {acc:.4f}")
+        accuracy = accuracy_score(y_test, y_pred)
+        log.info(f"[MLPredictorAgent] Classification Accuracy: {accuracy:.4f}")
         self.save_predictions(df.index[-len(y_pred):], y_pred, y_conf)
-        self.last_prediction_time = datetime.utcnow()
-
-    def _get_data(self, ticker=None, period="60d", interval="5m"):
-        ticker = ticker or self.ticker
-        df = yf.download(ticker, period=period, interval=interval)
-        if df.empty:
-            log.warning(f"[MLPredictorAgent] No data fetched for regression.")
-            return None
-        close_series = df["Close"].squeeze()
-        df["SMA_20"] = close_series.rolling(window=20).mean()
-        df["EMA_20"] = close_series.ewm(span=20, adjust=False).mean()
-        df["Momentum"] = close_series - close_series.shift(5)
-        df.dropna(inplace=True)
-        log.info(f"[MLPredictorAgent] Fetched regression data for {ticker}, shape: {df.shape}")
-        return df
-
-    def _prepare_dataset(self, df):
-        df["Target"] = df["Close"].shift(-1)
-        df.dropna(inplace=True)
-        X = df[self.regression_features]
-        y = df["Target"]
-        log.info(f"[MLPredictorAgent] Regression features: {self.regression_features}, X shape: {X.shape}")
-        return train_test_split(X, y, test_size=0.2, shuffle=False)
-
-    def _train_model(self, X_train, y_train):
-        log.info(f"[MLPredictorAgent] Training regression model with X_train shape: {X_train.shape}")
-        model = XGBRegressor(objective="reg:squarederror", n_estimators=100)
-        model.fit(X_train, y_train)
-        return model
-
-    def _evaluate_and_log(self, model, X_test, y_test, predictions, ticker):
-        mse = mean_squared_error(y_test, predictions)
-        r2 = r2_score(y_test, predictions)
-        timestamp = datetime.now().isoformat()
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS ml_regression_metrics (
-                timestamp TEXT,
-                ticker TEXT,
-                mse REAL,
-                r2 REAL
-            )
-        """)
-        cursor.execute("INSERT INTO ml_regression_metrics (timestamp, ticker, mse, r2) VALUES (?, ?, ?, ?)",
-                       (timestamp, ticker, mse, r2))
-        conn.commit()
-        conn.close()
-        log.info(f"[MLPredictorAgent] Regression for {ticker} | MSE: {mse:.4f}, R2: {r2:.4f}")
-
-    def run_regression(self):
-        df = self._get_data(ticker=self.ticker)
-        if df is None or df.empty:
-            log.warning("[MLPredictorAgent] No data fetched for regression.")
-            return
-        X_train, X_test, y_train, y_test = self._prepare_dataset(df)
-        reg_model = self._train_model(X_train, y_train)
-        predictions = reg_model.predict(X_test)
-        self._evaluate_and_log(reg_model, X_test, y_test, predictions, self.ticker)
-        self.last_prediction_time = datetime.utcnow()
 
     def run(self):
         try:
-            if self.mode == "classification":
-                self.run_classification()
-            elif self.mode == "regression":
-                self.run_regression()
-            else:
-                log.error(f"[MLPredictorAgent] Unknown mode: {self.mode}")
+            self.run_classification()
         except Exception as e:
-            log.error(f"[MLPredictorAgent] Failed to run prediction: {e}", exc_info=True)
+            log.error(f"[MLPredictorAgent] Failed to run prediction: {e}")
+

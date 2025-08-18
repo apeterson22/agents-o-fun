@@ -1,6 +1,6 @@
-# dashboards/monitoring.py
 import logging
-from dash import Dash, html, Output, Input
+from dash import Dash, html
+from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import dashboards.components as components_pkg
 
@@ -10,7 +10,6 @@ class MonitoringDashboard:
     def __init__(self, agent_manager=None):
         self.agent_manager = agent_manager
         self.app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-        # Load all dashboard tab components (each instance must have TAB_ID, TAB_LABEL, render_layout and register_callbacks)
         self.tabs = components_pkg.load_tab_components(agent_manager=self.agent_manager)
         self._register_callbacks()
         self.app.layout = self._render_layout()
@@ -32,6 +31,7 @@ class MonitoringDashboard:
                 if module.TAB_ID == active_tab:
                     return module.render_layout()
             return html.Div("Unknown tab.")
+        # Register callbacks from each tab component
         for module in self.tabs:
             if hasattr(module, "register_callbacks"):
                 try:
@@ -43,7 +43,7 @@ class MonitoringDashboard:
 def launch_dashboard(agent_manager=None, host="0.0.0.0", port=8050):
     dashboard = MonitoringDashboard(agent_manager=agent_manager)
     logging.info(f"[MonitoringDashboard] Launching dashboard on http://{host}:{port}")
-    dashboard.app.run(debug=False, host=host, port=port)
+    dashboard.app.run_server(debug=False, host=host, port=port)
     logging.info("[MonitoringDashboard] Dashboard launched successfully")
 
 if __name__ == "__main__":

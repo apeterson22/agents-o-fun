@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, Input, Output, State
+from dash import html, dcc, Output, Input, State
 import dash_bootstrap_components as dbc
 import logging
 from configs.config_loader import load_config, update_config
@@ -14,7 +14,7 @@ class DataConfigTab:
     TAB_LABEL = TAB_LABEL
 
     def render_layout(self):
-        config = load_config()
+        config = load_config()  # Expects a dict with current configuration settings
         forex_api = config.get("data_feeds", {}).get("forex", {}).get("apiKey", "")
         crypto_api = config.get("data_feeds", {}).get("crypto", {}).get("apiKey", "")
         asset_universe = ", ".join(config.get("universe", []))
@@ -32,9 +32,11 @@ class DataConfigTab:
                 ]),
                 dbc.FormGroup([
                     dbc.Label("Asset Universe", html_for="asset-universe"),
-                    dbc.Input(id="asset-universe", type="text", 
-                              placeholder="Comma-separated symbols (e.g., AAPL, GOOGL, BTC-USD)", 
-                              value=asset_universe)
+                    dbc.Input(
+                        id="asset-universe", type="text",
+                        placeholder="Comma-separated symbols (e.g., AAPL, GOOGL, BTC-USD)",
+                        value=asset_universe
+                    )
                 ]),
                 dbc.Button("Update Configuration", id="update-config-btn", color="primary", n_clicks=0)
             ], inline=False),
@@ -45,10 +47,10 @@ class DataConfigTab:
     def register_callbacks(self, app):
         @app.callback(
             Output("config-update-status", "children"),
-            Input("update-config-btn", "n_clicks"),
-            State("forex-api-key", "value"),
-            State("crypto-api-key", "value"),
-            State("asset-universe", "value"),
+            [Input("update-config-btn", "n_clicks")],
+            [State("forex-api-key", "value"),
+             State("crypto-api-key", "value"),
+             State("asset-universe", "value")],
             prevent_initial_call=True
         )
         def update_config_callback(n_clicks, forex_key, crypto_key, universe_str):
@@ -67,7 +69,7 @@ class DataConfigTab:
                 logger.error("Dashboard: Failed to update configuration: %s", e)
                 return dbc.Alert("Failed to update configuration.", color="danger")
 
-_tab = DataConfigTab()
-render_layout = _tab.render_layout
-register_callbacks = _tab.register_callbacks
+# For convenience, export instance methods
+render_layout = DataConfigTab().render_layout
+register_callbacks = DataConfigTab().register_callbacks
 

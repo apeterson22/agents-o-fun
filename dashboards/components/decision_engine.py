@@ -4,15 +4,12 @@ import dash
 from core.agent_registry import control_agent, get_registered_agents
 import logging
 
-# Constants for the tab
 TAB_ID = "decision-engine"
 TAB_LABEL = "Decision Engine"
 
 class DecisionEngineTab:
     def __init__(self, agent_manager=None):
         self.agent_manager = agent_manager
-    TAB_ID = TAB_ID
-    TAB_LABEL = TAB_LABEL
 
     def render_layout(self):
         return html.Div([
@@ -27,12 +24,11 @@ class DecisionEngineTab:
 
     def register_callbacks(self, app):
         @app.callback(
-            Output("de-status", "children"),
-            Output("de-metrics", "children"),
-            Input("btn-start-de", "n_clicks"),
-            Input("btn-stop-de", "n_clicks"),
-            Input("btn-refresh-de", "n_clicks"),
-            Input("de-interval", "n_intervals")
+            [Output("de-status", "children"), Output("de-metrics", "children")],
+            [Input("btn-start-de", "n_clicks"),
+             Input("btn-stop-de", "n_clicks"),
+             Input("btn-refresh-de", "n_clicks"),
+             Input("de-interval", "n_intervals")]
         )
         def update_de_status(n_start, n_stop, n_refresh, n_intervals):
             ctx = dash.callback_context
@@ -46,17 +42,13 @@ class DecisionEngineTab:
                     action = "stop"
                 else:
                     action = "refresh"
-            # Control the decision engine agent
             result = control_agent("decision-engine", action)
-            # Retrieve health status from the registered agents
             agents = get_registered_agents()
             health = agents.get("decision-engine", {}).get("health", "No metrics available")
             status_text = f"Decision Engine Status: {result}"
             metrics_text = f"Metrics: {health}"
             return status_text, metrics_text
 
-# Expose the tab's layout and callbacks for the dashboard loader
-de_tab = DecisionEngineTab()
-render_layout = de_tab.render_layout
-register_callbacks = de_tab.register_callbacks
+render_layout = DecisionEngineTab().render_layout
+register_callbacks = DecisionEngineTab().register_callbacks
 

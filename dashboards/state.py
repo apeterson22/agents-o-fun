@@ -1,5 +1,3 @@
-# dashboards/state.py
-
 from collections import defaultdict
 import threading
 
