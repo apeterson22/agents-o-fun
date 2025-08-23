@@ -5,6 +5,7 @@ import threading
 from datetime import datetime, timedelta
 from core.agent_registry import register_agent
 from utils.network_utils import scan_network_devices, get_traffic_stats, get_routing_settings, update_routing_settings
+from utils.system_utils import get_system_metrics
 import logging
 
 log = logging.getLogger(__name__)
@@ -56,6 +57,18 @@ class NetworkMonitorAgent:
                     message TEXT
                 )
             """)
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS system_metrics (
+                    timestamp TEXT,
+                    cpu_percent REAL,
+                    memory_percent REAL,
+                    disk_percent REAL,
+                    bytes_sent INTEGER,
+                    bytes_recv INTEGER
+                )
+                """
+            )
             conn.commit()
 
     def log(self, level, message):
@@ -80,6 +93,10 @@ class NetworkMonitorAgent:
         log.info("[NetworkMonitorAgent] Saved traffic data.")
 
     def analyze_and_optimize(self):
+        # Record local system metrics for monitoring
+        metrics = get_system_metrics()
+        self.save_system_metrics(metrics)
+
         # Call utility functions without unsupported extra parameters.
         traffic_stats = get_traffic_stats()
         if not traffic_stats:
@@ -132,6 +149,21 @@ class NetworkMonitorAgent:
 
         update_routing_settings(routing_settings)
         self.log("info", "Applied routing optimizations.")
+
+    def save_system_metrics(self, metrics):
+        """Persist system metrics to the database."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "INSERT INTO system_metrics (timestamp, cpu_percent, memory_percent, disk_percent, bytes_sent, bytes_recv) VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    datetime.now().isoformat(),
+                    metrics["cpu_percent"],
+                    metrics["memory_percent"],
+                    metrics["disk_percent"],
+                    metrics["bytes_sent"],
+                    metrics["bytes_recv"],
+                ),
+            )
 
     def run(self):
         """
