@@ -4,7 +4,7 @@ Werkzeug<3.1
 plotly>=5.0.0
 importlib-metadata
 typing-extensions>=4.1.1
-requests
+requests>=2.32.0
 retrying
 nest-asyncio
 setuptools
@@ -17,10 +17,10 @@ tenacity>=6.2.0
 packaging
 MarkupSafe>=2.1.1
 zipp>=3.20
-charset-normalizer<4,>=2
-idna<4,>=2.5
-urllib3<3,>=1.21.1
-certifi>=2017.4.17
+charset-normalizer>=3.4.3
+idna>=3.10
+urllib3>=2.5.0
+certifi>=2024.8.30
 six>=1.7.0
 schedule
 pytrends
@@ -31,3 +31,4 @@ yfinance
 ta
 numpy
 pandas
+psutil>=5.9.8

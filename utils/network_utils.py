@@ -1,3 +1,4 @@
+import os
 import requests
 import logging
 
@@ -10,10 +11,13 @@ if not logger.handlers:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-# Router connection details
-HTTP_URL = "http://192.168.0.1:8082"
-HTTP_USER = "admin"
-HTTP_PASS = "I4mAw35ome!!"
+# Router connection details loaded from environment for security
+HTTP_URL = os.getenv("ROUTER_HTTP_URL", "https://192.168.0.1:8443")
+HTTP_USER = os.getenv("ROUTER_HTTP_USER")
+HTTP_PASS = os.getenv("ROUTER_HTTP_PASS")
+
+if not HTTP_USER or not HTTP_PASS:
+    logger.warning("Router credentials are not set in environment variables.")
 
 def scan_network_devices():
     """
@@ -23,7 +27,7 @@ def scan_network_devices():
         dict: Devices grouped by interface.
     """
     try:
-        response = requests.get(f"{HTTP_URL}/devices", auth=(HTTP_USER, HTTP_PASS), timeout=5)
+        response = requests.get(f"{HTTP_URL}/devices", auth=(HTTP_USER, HTTP_PASS), timeout=5, verify=True)
         response.raise_for_status()
         devices = response.json()
         grouped = {}
@@ -50,7 +54,7 @@ def get_traffic_stats(interface=None):
     if interface:
         url += f"?interface={interface}"
     try:
-        response = requests.get(url, auth=(HTTP_USER, HTTP_PASS), timeout=5)
+        response = requests.get(url, auth=(HTTP_USER, HTTP_PASS), timeout=5, verify=True)
         response.raise_for_status()
         stats = response.json()
         logger.info("Fetched traffic stats for interface: %s", interface if interface else "all")
@@ -68,7 +72,7 @@ def get_routing_settings():
     """
     url = f"{HTTP_URL}/routing-settings"
     try:
-        response = requests.get(url, auth=(HTTP_USER, HTTP_PASS), timeout=5)
+        response = requests.get(url, auth=(HTTP_USER, HTTP_PASS), timeout=5, verify=True)
         response.raise_for_status()
         settings = response.json()
         logger.info("Fetched routing settings.")
@@ -89,7 +93,7 @@ def update_routing_settings(settings):
     """
     url = f"{HTTP_URL}/routing-settings"
     try:
-        response = requests.post(url, json=settings, auth=(HTTP_USER, HTTP_PASS), timeout=5)
+        response = requests.post(url, json=settings, auth=(HTTP_USER, HTTP_PASS), timeout=5, verify=True)
         response.raise_for_status()
         result = response.json()
         logger.info("Updated routing settings successfully.")
