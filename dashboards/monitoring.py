@@ -1,7 +1,15 @@
 import logging
-from dash import Dash, html
-from dash.dependencies import Input, Output
-import dash_bootstrap_components as dbc
+
+try:
+    from dash import Dash, html
+    from dash.dependencies import Input, Output
+    import dash_bootstrap_components as dbc
+except ImportError as e:
+    raise ImportError(
+        "Dash and dash-bootstrap-components are required for the monitoring dashboard."
+        " Install them with 'pip install dash dash-bootstrap-components'."
+    ) from e
+
 import dashboards.components as components_pkg
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
