@@ -1,4 +1,5 @@
 # dashboards/components/network_monitoring.py (full corrected file)
+import os
 import dash
 from dash import html, dcc, Input, Output, State
 import requests
@@ -6,9 +7,9 @@ import pandas as pd
 import plotly.graph_objs as go
 import json
 
-HTTP_URL = "http://127.0.0.1:8082"
-HTTP_USER = "admin"
-HTTP_PASS = "supersecret"
+HTTP_URL = os.getenv("ROUTER_HTTP_URL", "https://127.0.0.1:8443")
+HTTP_USER = os.getenv("ROUTER_HTTP_USER")
+HTTP_PASS = os.getenv("ROUTER_HTTP_PASS")
 
 TAB_ID = "network-monitoring"
 TAB_LABEL = "Network Monitoring"
@@ -123,4 +124,7 @@ class NetworkMonitoringTab:
                     return False, html.Div("Network Monitoring has not been started.", className="alert alert-info")
             return False, html.Div("Agent Manager not available.", className="alert alert-danger")
 
-# No instantiation here; let load_tab_components handle it
+# Expose module-level functions for dashboard loader
+_instance = NetworkMonitoringTab(agent_manager=None)
+render_layout = _instance.render_layout
+register_callbacks = _instance.register_callbacks

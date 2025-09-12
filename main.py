@@ -3,12 +3,12 @@ import logging
 import threading
 import time
 from utils.db_init import init_databases
-from dashboards.monitoring import launch_dashboard
 from ai_self_improvement.reinforcement_learning import RLTrainer
 from environments.simulated_env import SimulatedTradingEnv
 from core.agent_registry import get_registered_agents
 from core.agent_loader import load_agents_from_config
 from core.agent_manager import AgentManager
+from staics import create_app
 
 # Import agents to ensure registration
 from agents.trading_agent import TradingAgent
@@ -39,13 +39,14 @@ def start_trainer():
     except Exception as e:
         logging.exception(f"Trainer thread failed: {e}")
 
-def start_dashboard(agent_manager):
+def start_staics_ui():
     try:
-        logging.info("Launching dashboard UI service...")
-        launch_dashboard(agent_manager=agent_manager, host="0.0.0.0")
-        logging.info("Dashboard launched successfully.")
+        logging.info("Launching STAICS web interface...")
+        app = create_app()
+        app.run(host="0.0.0.0", port=8000)
+        logging.info("STAICS interface launched successfully.")
     except Exception as e:
-        logging.exception(f"Dashboard thread failed: {e}")
+        logging.exception(f"STAICS thread failed: {e}")
         raise
 
 def main():
@@ -72,9 +73,9 @@ def main():
         except Exception as e:
             logging.error(f"Failed to start agent {agent_id}: {e}")
 
-    # Start dashboard in a separate thread
-    dashboard_thread = threading.Thread(target=start_dashboard, args=(manager,), daemon=True)
-    dashboard_thread.start()
+    # Start STAICS web interface in a separate thread
+    staics_thread = threading.Thread(target=start_staics_ui, daemon=True)
+    staics_thread.start()
 
     # Keep main thread alive
     try:
