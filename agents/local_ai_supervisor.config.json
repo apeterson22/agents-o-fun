@@ -1,0 +1,36 @@
+{
+  "state_file": "state/agent_state.json",
+  "providers": [
+    {
+      "name": "openai",
+      "endpoint": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "name": "grok",
+      "endpoint": "https://api.x.ai/v1",
+      "api_key_env": "GROK_API_KEY",
+      "model": "grok-2-latest"
+    },
+    {
+      "name": "microsoft",
+      "endpoint": "https://YOUR_AZURE_RESOURCE_NAME.openai.azure.com",
+      "api_key_env": "AZURE_OPENAI_API_KEY",
+      "model": "gpt-4o-mini",
+      "api_version": "2024-06-01"
+    },
+    {
+      "name": "github",
+      "endpoint": "https://models.inference.ai.azure.com",
+      "api_key_env": "GITHUB_TOKEN",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "name": "anthropic",
+      "endpoint": "https://api.anthropic.com/v1",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "model": "claude-3-5-sonnet-latest"
+    }
+  ]
+}
