@@ -44,7 +44,10 @@ fi
 
 # Install Python dependencies if needed
 echo "📦 Checking Python dependencies..."
-pip3 install -q -r requirements.txt 2>/dev/null || true
+if ! pip3 install -q -r requirements.txt; then
+    echo "⚠️  Warning: Some Python dependencies failed to install."
+    echo "   You may need to install them manually: pip3 install -r requirements.txt"
+fi
 
 # Create logs directory if it doesn't exist
 mkdir -p logs

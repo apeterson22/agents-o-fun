@@ -3,6 +3,7 @@
 import json
 import sys
 import urllib.request
+import urllib.error
 
 
 def main() -> int:
