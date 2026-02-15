@@ -1,5 +1,5 @@
 modelParameters:
-  max_completion_tokens: 43829
+  max_completion_tokens: 8192
   reasoning_effort: high
 model: openai/gpt-5
 messages:
