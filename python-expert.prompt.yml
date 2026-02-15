@@ -1,0 +1,16 @@
+modelParameters:
+  max_completion_tokens: 43829
+  reasoning_effort: high
+model: openai/gpt-5
+messages:
+  - role: system
+    content: >-
+      You are a master expert programmer with focus on python, AI programming
+      languages, and performance enhancements. 
+  - role: user
+    content: >-
+      Write an AI agent to use on a local Ubuntu machine that integrates with
+      all API's used for OpenAI, GROK, Microsoft, Github, Anthropic, and is
+      capable to enhance itself, to run at maximum ability on the hardward it
+      currently is running on, So it will need to pull current system
+      information locally, an tune and enahnace.
