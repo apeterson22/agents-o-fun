@@ -8,9 +8,10 @@ from typing import List, Dict, Optional, Union, Any
 import pandas as pd
 import numpy as np
 np.bool8 = np.bool_
+from configs import paths
 
-TRAINING_DB = 'training_data.db'
-EXPORT_DIR = 'training_exports'
+TRAINING_DB = "(paths.TRAINING_DATA_DB)" # 'training_data.db'
+EXPORT_DIR = "(paths.TRAINING_EXPORTS_FOLDER)"  # 'training_exports'
 
 os.makedirs(EXPORT_DIR, exist_ok=True)
 

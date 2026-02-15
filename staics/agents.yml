@@ -1,0 +1,7 @@
+agents:
+  - name: sys.top
+    desc: "Top snapshot"
+    cmd: ["bash","-lc","COLUMNS=140 top -b -n1 | head -n 30"]
+  - name: sys.df
+    desc: "Disk usage"
+    cmd: ["bash","-lc","df -hT"]

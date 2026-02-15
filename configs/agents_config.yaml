@@ -1,0 +1,40 @@
+agents:
+  trading:
+    description: "Fetches and stores stock market data"
+    model: "Finance RL Model"
+    data_source: "Yahoo Finance"
+  crypto:
+    description: "Crypto market analysis agent"
+    model: "LLM"
+    data_source: "exchange_data, social_media"
+  betting:
+    description: "Sports and betting odds analysis"
+    model: "LLM"
+    data_source: "betting_lines, sports_feeds"
+    bet_threshold: 1.5
+    bet_success_rate: 0.66
+    simulated_events: ["event1", "event2", "event3"]
+  ml-predictor:
+    description: "ML model for predicting stock price direction"
+    model: "XGBoost Classifier"
+    data_source: "yfinance, indicators"
+  marketing-guru:
+    description: "Marketing analysis agent using trends and NLP"
+    model: "LLM"
+    data_source: "Google Trends, Keywords"
+  network-monitoring:
+    description: "Monitors network activity and optimizes routing"
+    model: "custom"
+    data_source: "local_traffic"
+    target_ip: "192.168.1.1"
+    username: "admin"
+    password: "your_password_here"
+  shopify:
+    description: "Optimizes Shopify store based on trends and insights"
+    model: "LLM"
+    data_source: "Google Trends, Shopify Data"
+  decision-engine:
+    description: "Aggregates signals from all agents and executes trade decisions"
+    model: "Composite Decision Engine"
+    data_source: "multiple_agents"
+
