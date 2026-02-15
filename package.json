@@ -1,0 +1,28 @@
+{
+  "name": "agents-o-fun",
+  "version": "1.0.0",
+  "description": "AI trading and automation agents powered by OpenClaw",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "openclaw": "openclaw",
+    "setup": "openclaw onboard",
+    "start": "openclaw gateway --port 18789 --verbose",
+    "start:all": "./start.sh",
+    "test": "python3 test_integration.py",
+    "trading": "python3 main.py",
+    "shopify": "cd agents && python3 Shopify_agent.py"
+  },
+  "keywords": [
+    "openclaw",
+    "ai",
+    "trading",
+    "agent",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "openclaw": "latest"
+  }
+}
