@@ -10,7 +10,7 @@ messages:
   - role: user
     content: >-
       Write an AI agent to use on a local Ubuntu machine that integrates with
-      all API's used for OpenAI, GROK, Microsoft, Github, Anthropic, and is
-      capable to enhance itself, to run at maximum ability on the hardward it
+      all APIs used for OpenAI, GROK, Microsoft, Github, Anthropic, and is
+      capable of enhancing itself to run at maximum ability on the hardware it
       currently is running on, So it will need to pull current system
-      information locally, an tune and enahnace.
+      information locally, and tune and enhance.
