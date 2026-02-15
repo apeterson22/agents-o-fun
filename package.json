@@ -1,0 +1,23 @@
+{
+  "name": "agents-o-fun",
+  "version": "1.0.0",
+  "description": "AI trading and automation agents powered by OpenClaw",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "openclaw": "openclaw",
+    "setup": "openclaw onboard",
+    "start": "openclaw gateway --port 18789 --verbose"
+  },
+  "keywords": [
+    "openclaw",
+    "ai",
+    "trading",
+    "agent"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "openclaw": "latest"
+  }
+}

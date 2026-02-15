@@ -6,6 +6,16 @@ __pycache__/
 # C extensions
 *.so
 venv
+
+# Node.js / npm
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# OpenClaw
+.openclaw/
+.env.openclaw
 # Distribution / packaging
 .Python
 build/
