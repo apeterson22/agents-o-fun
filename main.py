@@ -9,6 +9,7 @@ from environments.simulated_env import SimulatedTradingEnv
 from core.agent_registry import get_registered_agents
 from core.agent_loader import load_agents_from_config
 from core.agent_manager import AgentManager
+from staics import create_app
 
 # Import agents to ensure registration
 from agents.trading_agent import TradingAgent
@@ -39,7 +40,7 @@ def start_trainer():
     except Exception as e:
         logging.exception(f"Trainer thread failed: {e}")
 
-def start_dashboard(agent_manager):
+def start_staics_ui():
     try:
         logging.info("Launching STAICS web UI service...")
         app = create_app()
@@ -75,9 +76,9 @@ def main():
         except Exception as e:
             logging.error(f"Failed to start agent {agent_id}: {e}")
 
-    # Start dashboard in a separate thread
-    dashboard_thread = threading.Thread(target=start_dashboard, args=(manager,), daemon=True)
-    dashboard_thread.start()
+    # Start STAICS web interface in a separate thread
+    staics_thread = threading.Thread(target=start_staics_ui, daemon=True)
+    staics_thread.start()
 
     # Keep main thread alive
     try:

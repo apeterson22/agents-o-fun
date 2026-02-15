@@ -63,9 +63,13 @@ def once():
 
 @bp.get("/api/metrics/stream")
 def stream():
+    # token accepted via ?token=... handled in jwt_required inside generator
     def gen():
+        # First line: retry
         yield "retry: 2000\n\n"
+        # authenticate each tick to keep it simple
         while True:
+            # lightweight auth check
             from ..jwtutil import _extract_token, _secret
             import jwt
 
@@ -85,7 +89,11 @@ def stream():
             payload = {
                 "ts": int(time.time() * 1000),
                 "cpu": psutil.cpu_percent(interval=0.25),
-                "mem": {"total": vm.total, "used": vm.used, "percent": vm.percent},
+                "mem": {
+                    "total": vm.total,
+                    "used": vm.used,
+                    "percent": vm.percent,
+                },
                 "gpu": _gpu_info(),
                 "redis": _redis_stats(),
             }

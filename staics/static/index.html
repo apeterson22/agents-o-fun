@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>STAICS Panel</title>
+  <style>
+    :root{--panel:#0f1830;--ink:#e8eefc;--muted:#9cb0cf;--line:#1c2942}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#0b1220;color:var(--ink)}
+    header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center}
+    input,button,textarea{padding:8px 10px;border-radius:10px;border:1px solid #294069;background:#0f1830;color:var(--ink)}
+    button{cursor:pointer;background:#1e3158}
+    main{padding:16px;display:grid;gap:16px;grid-template-columns: 340px 1fr}
+    .card{background:#0f1830;border:1px solid #1c2942;border-radius:14px;padding:12px}
+    h3{margin:0 0 10px 0;font-size:14px;letter-spacing:.4px;color:#9fb4ff}
+    .grid{display:grid;gap:12px}
+    .kv{display:flex;justify-content:space-between;margin:6px 0}
+    .gauge{width:140px;height:140px;border-radius:50%;display:grid;place-items:center;background:
+      conic-gradient(#69f 0 var(--p,0%), #233659 var(--p,0%) 100%);}
+    .gauge span{font-size:22px}
+    #memCanvas{width:100%;height:120px;display:block}
+    pre{white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;background:#091225;border-radius:10px;padding:10px}
+    .gpu{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px;border:1px solid #1f2d4b;border-radius:10px}
+    .ok{color:#73ffa4}.bad{color:#ff8a8a}
+    /* Chat */
+    .chat{display:grid;grid-template-rows:auto 1fr auto;gap:10px;height:420px}
+    .chat-log{overflow:auto;border:1px solid #1c2942;border-radius:10px;padding:10px;background:#0b1426}
+    .msg{margin:0 0 10px 0;line-height:1.35}
+    .msg b{font-weight:600}
+    .msg.user b{color:#ffd28a}
+    .msg.bot b{color:#73ffa4}
+    .msg .bubble{display:inline-block;background:#0e1a33;border:1px solid #22345a;border-radius:10px;padding:8px 10px;max-width:100%}
+    .msg.user .bubble{background:#1a1230;border-color:#3a2a6a}
+    .chat-input{display:flex;gap:8px;align-items:flex-start}
+    .chat-input textarea{flex:1;min-height:44px;max-height:120px;resize:vertical}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:12px;border-radius:999px;padding:4px 8px;border:1px solid #334c7a;background:#0c1530}
+    code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <strong>STAICS</strong>
+    <input id="user" placeholder="username" value="admin"/>
+    <input id="pass" placeholder="password" type="password"/>
+    <button id="loginBtn">Login</button>
+    <span id="loginMsg" class="muted"></span>
+  </header>
+
+  <main>
+    <section class="card">
+      <h3>System</h3>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div class="gauge" id="cpuG"><span id="cpuPct">--%</span></div>
+        <div class="grid" style="min-width:180px">
+          <div class="kv"><span class="muted">CPU</span><b id="cpuLbl">--</b></div>
+          <div class="kv"><span class="muted">Mem used</span><b id="memUsed">--</b></div>
+          <div class="kv"><span class="muted">Mem total</span><b id="memTotal">--</b></div>
+          <div class="kv"><span class="muted">Redis</span><b id="redisLbl" class="ok">—</b></div>
+        </div>
+      </div>
+      <canvas id="memCanvas" width="560" height="120"></canvas>
+    </section>
+
+    <section class="grid" style="gap:16px">
+      <div class="card">
+        <h3>GPUs</h3>
+        <div id="gpus" class="grid"></div>
+      </div>
+      <div class="card">
+        <h3>Live Logs</h3>
+        <pre id="logs"></pre>
+      </div>
+      <div class="card">
+        <h3>Chat (Main Agent)</h3>
+        <div class="chat">
+          <div id="chatLog" class="chat-log"></div>
+          <div class="row">
+            <span class="pill">/agents</span>
+            <span class="pill">/agents.run sys.top</span>
+            <span class="pill">/optimize.scan</span>
+          </div>
+          <div class="chat-input">
+            <textarea id="chatInput" placeholder="Type a message or slash command..."></textarea>
+            <button id="sendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+const API = location.origin + "/api";
+const LS_KEY="staics_token";
+let token = localStorage.getItem(LS_KEY)||"";
+let memPoints=[];
+
+function fmtBytes(n){ if(!n&&n!==0) return "--";
+  const u=["B","KB","MB","GB","TB"]; let i=0; while(n>=1024 && i<u.length-1){n/=1024;i++} return n.toFixed(1)+" "+u[i]; }
+
+function setCPU(p){
+  const g=document.getElementById('cpuG');
+  g.style.setProperty('--p', p.toFixed(1)+'%');
+  document.getElementById('cpuPct').textContent = p.toFixed(1)+"%";
+  document.getElementById('cpuLbl').textContent = p.toFixed(1)+"%";
+}
+
+function drawMem(){
+  const c=document.getElementById('memCanvas'), ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  if(memPoints.length<2) return;
+  const max=100;
+  ctx.beginPath();
+  const step = c.width/Math.max(59,memPoints.length-1);
+  memPoints.slice(-60).forEach((v,i)=>{
+    const x=i*step, y=c.height - (v/max)*c.height;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.lineWidth=2; ctx.strokeStyle="#69f"; ctx.stroke();
+}
+
+function renderGPUs(arr){
+  const box=document.getElementById('gpus'); box.innerHTML="";
+  if(!arr || !arr.length){ box.innerHTML='<span class="muted">No GPUs detected.</span>'; return; }
+  for(const g of arr){
+    const div=document.createElement('div'); div.className="gpu";
+    div.innerHTML = `
+      <div>
+        <div><b>${g.name||"GPU"}</b></div>
+        <div class="muted">Temp: ${g.temp??"--"}°C · Util: ${g.util??"--"}%</div>
+      </div>
+      <div>${fmtBytes(g.mem_used||0)} / ${fmtBytes(g.mem_total||0)}</div>`;
+    box.appendChild(div);
+  }
+}
+
+function setRedis(r){
+  const el=document.getElementById('redisLbl');
+  if(!r||!r.ok){ el.textContent="down"; el.className="bad"; return; }
+  el.textContent = `${(r.used_memory||0)}B · clients ${r.connected_clients||0}`;
+  el.className="ok";
+}
+
+function appendMsg(who, text){
+  const log=document.getElementById('chatLog');
+  const div=document.createElement('div');
+  div.className = `msg ${who}`;
+  div.innerHTML = `<b>${who==='user'?'You':'Agent'}</b><div class="bubble">${text}</div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function connectStreams(){
+  if(!token){return;}
+  // METRICS
+  const msrc = new EventSource(`${API}/metrics/stream?token=${encodeURIComponent(token)}`);
+  msrc.addEventListener('metrics', (ev)=>{ try{
+      const d = JSON.parse(ev.data);
+      if(typeof d.cpu === "number") setCPU(d.cpu);
+      if(d.mem){
+        document.getElementById('memUsed').textContent = fmtBytes(d.mem.used||0);
+        document.getElementById('memTotal').textContent= fmtBytes(d.mem.total||0);
+        if(typeof d.mem.percent==="number"){ memPoints.push(d.mem.percent); if(memPoints.length>200) memPoints.shift(); drawMem(); }
+      }
+      if(Array.isArray(d.gpu)) renderGPUs(d.gpu);
+      if(d.redis) setRedis(d.redis);
+    }catch(e){} });
+  msrc.onerror = ()=>{/* keep alive */};
+
+  // LOGS
+  const lsrc = new EventSource(`${API}/logs/stream?token=${encodeURIComponent(token)}`);
+  lsrc.addEventListener('log',(ev)=>{
+    const pre=document.getElementById('logs');
+    pre.textContent += ev.data + "\n";
+    const lines = pre.textContent.split("\n");
+    if(lines.length>300) pre.textContent = lines.slice(-300).join("\n");
+    pre.scrollTop = pre.scrollHeight;
+  });
+  lsrc.onerror = ()=>{};
+}
+
+async function login(){
+  const u=document.getElementById('user').value.trim();
+  const p=document.getElementById('pass').value;
+  const msg=document.getElementById('loginMsg');
+  msg.textContent="...";
+  try{
+    const r = await fetch(`${API}/auth/login`,{
+      method:"POST", headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:u,password:p})
+    });
+    const j = await r.json();
+    if(j.token){
+      token=j.token; localStorage.setItem(LS_KEY, token);
+      msg.textContent="ok";
+      connectStreams();
+    }else{
+      msg.textContent="login failed";
+    }
+  }catch(e){ msg.textContent="error"; }
+}
+
+function handleSlash(s){
+  if(s.startsWith('/agents.run')){
+    const name = s.split(/\s+/)[1]||'';
+    if(!name) return appendMsg('bot','Usage: /agents.run <name>');
+    fetch(`${API}/agents/run`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({name})})
+      .then(r=>r.json()).then(j=>appendMsg('bot', j.ok? 'Started '+name : 'Error: '+(j.error||'fail')));
+    return;
+  }
+  if(s.startsWith('/agents')){
+    fetch(`${API}/agents`,{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.json()).then(j=>appendMsg('bot', 'Agents: '+(j.agents||[]).map(a=>a.name).join(', ')));
+    return;
+  }
+  if(s.startsWith('/optimize.scan')){
+    fetch(`${API}/optimize/scan`,{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.json()).then(j=>appendMsg('bot', 'Suggestions: '+JSON.stringify(j.suggestions||[])));
+    return;
+  }
+}
+
+function sendChat(){
+  const input=document.getElementById('chatInput');
+  const t=input.value.trim();
+  if(!t) return;
+  appendMsg('user', t);
+  input.value="";
+  if(t.startsWith('/')) return handleSlash(t);
+
+  // Prefer SSE streaming
+  const es = new EventSource(`${API}/chat/stream?token=${encodeURIComponent(token)}&q=`+encodeURIComponent(t));
+  let acc = "";
+  es.addEventListener('delta', (ev)=>{ acc += ev.data; });
+  es.addEventListener('done',  ()=>{ appendMsg('bot', acc); es.close(); });
+  es.onerror = ()=>{ es.close(); };
+}
+
+document.getElementById('loginBtn').addEventListener('click', login);
+document.getElementById('sendBtn').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }});
+
+// auto-connect if token present
+if(token){ document.getElementById('loginMsg').textContent="token present"; connectStreams(); }
+</script>
+</body>
+</html>

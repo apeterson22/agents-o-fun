@@ -31,6 +31,7 @@ class QueueLite(list):
 def logs_stream():
     def gen():
         yield "retry: 2000\n\n"
+        # quick auth
         while True:
             tok = _extract_token()
             if not tok:
@@ -48,8 +49,10 @@ def logs_stream():
         with _lock:
             _subs.add(q)
         try:
+            # send recent history
             for l in list(_buf)[-50:]:
                 yield "event: log\ndata: " + l + "\n\n"
+            # live
             last_ping = time.time()
             while True:
                 if q:
@@ -71,6 +74,7 @@ def logs_stream():
     )
 
 
+# convenience exports
 def log_exec_start(user, cmd, args):
     push_log({"ts": int(time.time()), "level": "INFO", "event": "exec_start", "user": user, "cmd": cmd, "args": args})
 

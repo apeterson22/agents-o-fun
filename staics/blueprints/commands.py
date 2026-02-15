@@ -18,44 +18,53 @@ def _os():
 
 
 _COMMANDS = {
-    "echo": {"title": "Echo", "schema": {"args": [{"name": "text", "type": "string", "required": True}]}} ,
+    "echo": {"title": "Echo", "schema": {"args": [{"name": "text", "type": "string", "required": True}]}},
     "uptime": {"title": "Uptime", "schema": {"args": []}},
     "sys.network_status": {"title": "Network status", "schema": {"args": []}},
     "sys.open_terminal": {"title": "Open terminal", "schema": {"args": []}},
-    "sys.textpad": {"title": "Open text editor", "schema": {"args": [{"name": "file", "type": "string", "required": False}]}}
+    "sys.textpad": {
+        "title": "Open text editor",
+        "schema": {"args": [{"name": "file", "type": "string", "required": False}]},
+    },
 }
 
 
 @bp.get("/api/commands")
 @jwt_required
 def list_commands():
-    cmds = [{"id": k, "title": v["title"], "schema": v["schema"]} for k, v in _COMMANDS.items()]
-    return jsonify({"commands": cmds, "os": _os()})
+    return jsonify({"commands": [{"id": k, "title": v["title"], "schema": v["schema"]} for k, v in _COMMANDS.items()], "os": _os()})
 
 
 def _launch_terminal():
-    osname = _os()
-    if osname == "linux":
-        for cand in ("x-terminal-emulator", "gnome-terminal", "konsole", "xterm", "alacritty", "wezterm"):
+    os_name = _os()
+    if os_name == "linux":
+        for cand in (
+            "x-terminal-emulator",
+            "gnome-terminal",
+            "konsole",
+            "xterm",
+            "alacritty",
+            "wezterm",
+        ):
             if subprocess.call(["bash", "-lc", f"command -v {cand} >/dev/null 2>&1"]) == 0:
                 subprocess.Popen([cand])
                 return True
         return False
-    if osname == "mac":
+    if os_name == "mac":
         subprocess.Popen(["open", "-a", "Terminal"])
         return True
-    if osname == "windows":
+    if os_name == "windows":
         subprocess.Popen(["cmd", "/c", "start"], shell=True)
         return True
     return False
 
 
 def _open_textpad(path=None):
-    osname = _os()
+    os_name = _os()
     path = path or ""
-    if osname == "linux":
+    if os_name == "linux":
         subprocess.Popen(["xdg-open", path or "."])
-    elif osname == "mac":
+    elif os_name == "mac":
         subprocess.Popen(["open", path or "."])
     else:
         subprocess.Popen(["cmd", "/c", "start", path or "."], shell=True)

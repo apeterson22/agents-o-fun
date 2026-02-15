@@ -7,8 +7,9 @@ def _env(k, d=None):
 
 
 def _secret() -> str:
+    # Prefer JWT_SECRET; fallback SECRET_KEY; strip quotes
     s = _env("JWT_SECRET") or _env("SECRET_KEY") or "changeme"
-    if s and len(s) >= 2 and s[0] == s[-1] and s[0] in ("'", '"'):
+    if s and len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
         s = s[1:-1]
     return s
 
@@ -20,12 +21,15 @@ def issue_token(sub: str, ttl: int = 24 * 3600) -> str:
 
 
 def _extract_token():
+    # Authorization: Bearer <token>
     auth = request.headers.get("Authorization", "")
     if auth.lower().startswith("bearer "):
         return auth.split(None, 1)[1].strip()
+    # ?token=...
     q = request.args.get("token")
     if q:
         return q.strip()
+    # Optional JSON body {"token": "..."}
     try:
         data = request.get_json(silent=True) or {}
         tok = data.get("token")
@@ -54,5 +58,6 @@ def jwt_required(fn):
     return _wrap
 
 
+# Back-compat aliases
 require_jwt = jwt_required
 token_required = jwt_required

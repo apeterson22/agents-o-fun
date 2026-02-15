@@ -1,10 +1,12 @@
-import os, subprocess, yaml, json
+import os, subprocess, yaml, json, pathlib
 from flask import Blueprint, jsonify, request
 from ..jwtutil import jwt_required
 from .logs_stream import log_exec_start, log_exec_line
 
 bp = Blueprint("agents", __name__)
-AGENTS_YAML = os.environ.get("AGENTS_YAML", os.path.join(os.path.dirname(__file__), "..", "agents.yml"))
+AGENTS_YAML = os.environ.get(
+    "AGENTS_YAML", str(pathlib.Path(__file__).resolve().parent.parent / "agents.yml")
+)
 
 
 def _load():
@@ -40,7 +42,7 @@ def run_agent():
     try:
         p = subprocess.Popen(cmd + args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         out_lines = []
-        for line in iter(p.stdout.readline, ''):
+        for line in iter(p.stdout.readline, ""):
             line = line.rstrip("\n")
             out_lines.append(line)
             log_exec_line(json.dumps({"agent": name, "line": line}))

@@ -1,5 +1,5 @@
 import os
-import os
+
 from flask import Blueprint, jsonify
 from ..jwtutil import jwt_required
 

@@ -33,7 +33,9 @@ def apply():
         if a.get("type") == "set_swappiness":
             val = int(a.get("value", 10))
             cmds.append(f"sysctl -w vm.swappiness={val}")
-            cmds.append(f"sed -i -E 's/^vm\\.swappiness=.*/vm.swappiness={val}/' /etc/sysctl.conf || echo 'vm.swappiness={val}' >> /etc/sysctl.conf")
+            cmds.append(
+                f"sed -i -E 's/^vm\\.swappiness=.*/vm.swappiness={val}/' /etc/sysctl.conf || echo 'vm.swappiness={val}' >> /etc/sysctl.conf"
+            )
     if os.environ.get("ALLOW_OPTIMIZE_APPLY", "0") in ("1", "true", "yes"):
         outs = []
         for c in cmds:
