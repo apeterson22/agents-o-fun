@@ -4,7 +4,6 @@ from ..jwtutil import jwt_required
 bp = Blueprint("ai", __name__)
 
 
-
 @bp.get("/api/ai/config")
 @jwt_required
 def ai_config():
@@ -22,6 +21,7 @@ def ai_chat():
 
 @bp.get("/api/chat/stream")
 def chat_stream():
+    # SSE streaming "tokens" from a trivial reply
     from ..jwtutil import _extract_token, _secret
     import jwt, time
 

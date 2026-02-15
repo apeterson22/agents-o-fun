@@ -1,4 +1,4 @@
-import platform, subprocess, json
+import platform, shlex, subprocess, json
 from flask import Blueprint, jsonify, request
 from ..jwtutil import jwt_required
 from .logs_stream import log_exec_start, log_exec_line
@@ -104,6 +104,7 @@ def run_cmd():
         return jsonify({"ok": False, "error": str(e)})
 
 
+# Back-compat plain /run
 @bp.post("/run")
 @jwt_required
 def run_compat():

@@ -5,6 +5,7 @@ from flask_limiter import Limiter
 
 
 def _client_ip():
+    # X-Real-IP if proxied, else remote_addr
     return request.headers.get("X-Real-IP") or request.remote_addr or "0.0.0.0"
 
 
@@ -26,6 +27,7 @@ def _json_logger(app: Flask):
 
 
 def _register_all_blueprints(app: Flask):
+    """Auto-import staics.blueprints.* and register bp if present; skip duplicate names."""
     pkg_name = "staics.blueprints"
     base = pathlib.Path(__file__).with_name("blueprints")
     if not base.exists():

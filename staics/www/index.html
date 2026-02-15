@@ -153,6 +153,7 @@ function appendMsg(who, text){
 
 function connectStreams(){
   if(!token){return;}
+  // METRICS
   const msrc = new EventSource(`${API}/metrics/stream?token=${encodeURIComponent(token)}`);
   msrc.addEventListener('metrics', (ev)=>{ try{
       const d = JSON.parse(ev.data);
@@ -227,6 +228,7 @@ function sendChat(){
   input.value="";
   if(t.startsWith('/')) return handleSlash(t);
 
+  // Prefer SSE streaming
   const es = new EventSource(`${API}/chat/stream?token=${encodeURIComponent(token)}&q=`+encodeURIComponent(t));
   let acc = "";
   es.addEventListener('delta', (ev)=>{ acc += ev.data; });
@@ -238,6 +240,7 @@ document.getElementById('loginBtn').addEventListener('click', login);
 document.getElementById('sendBtn').addEventListener('click', sendChat);
 document.getElementById('chatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }});
 
+// auto-connect if token present
 if(token){ document.getElementById('loginMsg').textContent="token present"; connectStreams(); }
 </script>
 </body>
