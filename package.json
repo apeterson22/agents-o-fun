@@ -7,13 +7,18 @@
   "scripts": {
     "openclaw": "openclaw",
     "setup": "openclaw onboard",
-    "start": "openclaw gateway --port 18789 --verbose"
+    "start": "openclaw gateway --port 18789 --verbose",
+    "start:all": "./start.sh",
+    "test": "python3 test_integration.py",
+    "trading": "python3 main.py",
+    "shopify": "cd agents && python3 Shopify_agent.py"
   },
   "keywords": [
     "openclaw",
     "ai",
     "trading",
-    "agent"
+    "agent",
+    "automation"
   ],
   "author": "",
   "license": "MIT",
