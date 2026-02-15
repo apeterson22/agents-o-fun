@@ -18,7 +18,9 @@ def _gpu_info():
             temp = nv.nvmlDeviceGetTemperature(h, nv.NVML_TEMPERATURE_GPU)
             arr.append({
                 "index": i,
-                "name": nv.nvmlDeviceGetName(h).decode() if hasattr(nv.nvmlDeviceGetName(h), "decode") else str(nv.nvmlDeviceGetName(h)),
+                "name": nv.nvmlDeviceGetName(h).decode()
+                if hasattr(nv.nvmlDeviceGetName(h), "decode")
+                else str(nv.nvmlDeviceGetName(h)),
                 "mem_total": int(mem.total),
                 "mem_used": int(mem.used),
                 "util": int(util),
@@ -36,7 +38,11 @@ def _redis_stats():
         import redis
         r = redis.Redis.from_url(url, socket_connect_timeout=0.2, socket_timeout=0.2)
         info = r.info()
-        return {"ok": True, "used_memory": info.get("used_memory", 0), "connected_clients": info.get("connected_clients", 0)}
+        return {
+            "ok": True,
+            "used_memory": info.get("used_memory", 0),
+            "connected_clients": info.get("connected_clients", 0),
+        }
     except Exception:
         return {"ok": False}
 
@@ -57,15 +63,12 @@ def once():
 
 @bp.get("/api/metrics/stream")
 def stream():
-    # token accepted via ?token=... handled in jwt_required inside generator
     def gen():
-        # First line: retry
         yield "retry: 2000\n\n"
-        # authenticate each tick to keep it simple
         while True:
-            # lightweight auth check
             from ..jwtutil import _extract_token, _secret
             import jwt
+
             tok = _extract_token()
             if not tok:
                 yield "event: error\ndata: missing token\n\n"
@@ -89,4 +92,8 @@ def stream():
             yield "event: metrics\ndata: " + json.dumps(payload) + "\n\n"
             time.sleep(1.0)
 
-    return Response(gen(), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    return Response(
+        gen(),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

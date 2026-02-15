@@ -18,7 +18,7 @@ def _os():
 
 
 _COMMANDS = {
-    "echo": {"title": "Echo", "schema": {"args": [{"name": "text", "type": "string", "required": True}]}},
+    "echo": {"title": "Echo", "schema": {"args": [{"name": "text", "type": "string", "required": True}]}} ,
     "uptime": {"title": "Uptime", "schema": {"args": []}},
     "sys.network_status": {"title": "Network status", "schema": {"args": []}},
     "sys.open_terminal": {"title": "Open terminal", "schema": {"args": []}},
@@ -29,32 +29,33 @@ _COMMANDS = {
 @bp.get("/api/commands")
 @jwt_required
 def list_commands():
-    return jsonify({"commands": [{"id": k, "title": v["title"], "schema": v["schema"]} for k, v in _COMMANDS.items()], "os": _os()})
+    cmds = [{"id": k, "title": v["title"], "schema": v["schema"]} for k, v in _COMMANDS.items()]
+    return jsonify({"commands": cmds, "os": _os()})
 
 
 def _launch_terminal():
-    os = _os()
-    if os == "linux":
+    osname = _os()
+    if osname == "linux":
         for cand in ("x-terminal-emulator", "gnome-terminal", "konsole", "xterm", "alacritty", "wezterm"):
             if subprocess.call(["bash", "-lc", f"command -v {cand} >/dev/null 2>&1"]) == 0:
                 subprocess.Popen([cand])
                 return True
         return False
-    if os == "mac":
+    if osname == "mac":
         subprocess.Popen(["open", "-a", "Terminal"])
         return True
-    if os == "windows":
+    if osname == "windows":
         subprocess.Popen(["cmd", "/c", "start"], shell=True)
         return True
     return False
 
 
 def _open_textpad(path=None):
-    os = _os()
+    osname = _os()
     path = path or ""
-    if os == "linux":
+    if osname == "linux":
         subprocess.Popen(["xdg-open", path or "."])
-    elif os == "mac":
+    elif osname == "mac":
         subprocess.Popen(["open", path or "."])
     else:
         subprocess.Popen(["cmd", "/c", "start", path or "."], shell=True)

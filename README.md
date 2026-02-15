@@ -40,6 +40,7 @@ Below is the `README.md` content in plain Markdown, ready for you to copy and pa
 - **External Tools**: Connect to web searches, X posts, or user-uploaded files (images, PDFs, etc.).
 - *Ready-Made Fun*: Try out pre-built agents with playful examples.
 - **Extensibility**: Add your own tools, APIs, or data sources easily.
+- **STAICS Web Panel**: Control the system through a secure Flask interface that streams metrics, logs, and a chat-driven command center.
 
 ---
 

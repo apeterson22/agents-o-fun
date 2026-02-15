@@ -4,7 +4,7 @@ from ..jwtutil import jwt_required
 from .logs_stream import log_exec_start, log_exec_line
 
 bp = Blueprint("agents", __name__)
-AGENTS_YAML = os.environ.get("AGENTS_YAML", "/apps/STAICS/agents.yml")
+AGENTS_YAML = os.environ.get("AGENTS_YAML", os.path.join(os.path.dirname(__file__), "..", "agents.yml"))
 
 
 def _load():

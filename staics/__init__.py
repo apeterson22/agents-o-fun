@@ -48,16 +48,15 @@ def _register_all_blueprints(app: Flask):
 
 def create_app() -> Flask:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+    base_dir = pathlib.Path(__file__).resolve().parent
+    load_dotenv(base_dir / ".env")
 
     app = Flask(__name__)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # Rate limiting (Flask-Limiter 3.8.x)
     limiter = Limiter(key_func=_client_ip, default_limits=["500 per minute"])
     limiter.init_app(app)
 
-    # Health + routes
     @app.get("/healthz")
     def healthz():
         return jsonify({"name": "S.T.A.I.C.S.", "node": os.uname().nodename, "status": "ok"})

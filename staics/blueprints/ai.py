@@ -15,7 +15,6 @@ def ai_config():
 def ai_chat():
     data = request.get_json(silent=True) or {}
     msg = (data.get("message") or "").strip()
-    # Simple bot: mirror with system hint
     reply = f"[main-agent] You said: {msg}"
     return jsonify({"ok": True, "reply": reply})
 

@@ -166,9 +166,8 @@ function connectStreams(){
       if(Array.isArray(d.gpu)) renderGPUs(d.gpu);
       if(d.redis) setRedis(d.redis);
     }catch(e){} });
-  msrc.onerror = ()=>{/* keep alive */};
+  msrc.onerror = ()=>{};
 
-  // LOGS
   const lsrc = new EventSource(`${API}/logs/stream?token=${encodeURIComponent(token)}`);
   lsrc.addEventListener('log',(ev)=>{
     const pre=document.getElementById('logs');
