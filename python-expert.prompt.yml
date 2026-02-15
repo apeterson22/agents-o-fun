@@ -13,4 +13,4 @@ messages:
       all APIs used for OpenAI, GROK, Microsoft, Github, Anthropic, and is
       capable of enhancing itself to run at maximum ability on the hardware it
       currently is running on, So it will need to pull current system
-      information locally, an tune and enhance.
+      information locally, and tune and enhance.
